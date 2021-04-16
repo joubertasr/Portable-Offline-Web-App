@@ -12,7 +12,7 @@ import {
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import MenuIcon from "@material-ui/icons/Menu";
-import MailIcon from "@material-ui/icons/Mail";
+import HomeIcon from "@material-ui/icons/Home";
 
 import "./App.scss";
 import theme from "./styles/theme";
@@ -23,6 +23,20 @@ type IPage = "Home" | "File";
 function App() {
   const [menuOpen, setMenuOpen] = useState<boolean>();
   const [page, setPage] = useState<IPage>("Home");
+
+  const pageMenuItem = (page: IPage) => (
+    <ListItem button key={"Home"}>
+      <ListItemIcon
+        onClick={() => {
+          setPage("Home");
+        }}
+      >
+        {page === "Home" && <HomeIcon />}
+      </ListItemIcon>
+      <ListItemText primary={"Home"} />
+    </ListItem>
+  );
+  const pages: IPage[] = ["Home"];
 
   return (
     <ThemeProvider theme={theme}>
@@ -49,12 +63,7 @@ function App() {
             setMenuOpen(false);
           }}
         >
-          <ListItem button key={"Test"}>
-            <ListItemIcon>
-              <MailIcon />
-            </ListItemIcon>
-            <ListItemText primary={"Test"} />
-          </ListItem>
+          {pages.map((p) => pageMenuItem(p))}
         </Drawer>
         {page === "Home" && <Home />}
       </Container>
