@@ -32,7 +32,7 @@ function App() {
       key={pageItem}
       onClick={() => {
         setPage(pageItem);
-        console.log("Change page to:", pageItem);
+        setMenuOpen(false);
       }}
     >
       <ListItemIcon>
