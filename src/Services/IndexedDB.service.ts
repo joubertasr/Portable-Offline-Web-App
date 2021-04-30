@@ -43,6 +43,22 @@ export class IndexDBService {
         if (!req) {
           rej("Request failed");
         }
+        req.onsuccess = () => {
+          res(true);
+        };
+      } catch (e) {
+        rej(e.reason);
+      }
+    });
+  }
+
+  public add(id: string, data: any) {
+    return new Promise((res, rej) => {
+      try {
+        const req = this.getObjectStoreReadWrite()?.add(data, id);
+        if (!req) {
+          rej("Request failed");
+        }
         req.onsuccess = (data) => {
           res(data);
         };
