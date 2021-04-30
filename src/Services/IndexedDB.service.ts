@@ -2,6 +2,7 @@ export class IndexDBService {
   private instance: IDBDatabase | undefined;
   private dbName: string;
   private storeName: string;
+  private versionNumber: number = 1;
 
   constructor(databaseName: string, storeName: string) {
     this.dbName = databaseName;
@@ -12,13 +13,15 @@ export class IndexDBService {
       );
     }
     try {
-      const req = window.indexedDB.open(this.dbName, 1);
+      const req = window.indexedDB.open(this.dbName, this.versionNumber);
       if (req) {
         req.onsuccess = (e: any) => {
           if (e.target) {
             this.instance = e.target.result;
-            this.checkForStore();
           }
+        };
+        req.onupgradeneeded = (e: any) => {
+          this.checkForStore(e.target.result);
         };
       }
     } catch (e) {
@@ -26,12 +29,12 @@ export class IndexDBService {
     }
   }
 
-  public checkForStore() {
-    if (this.instance) {
+  public checkForStore(instance: any) {
+    if (instance) {
       try {
         this.getObjectStoreReadWrite();
       } catch (e) {
-        this.instance.createObjectStore(this.storeName);
+        instance.createObjectStore(this.storeName);
       }
     }
   }
@@ -43,8 +46,11 @@ export class IndexDBService {
         if (!req) {
           rej("Request failed");
         }
-        req.onsuccess = () => {
-          res(true);
+        req.onsuccess = (data: any) => {
+          res(data.target.result);
+        };
+        req.onerror = (error: any) => {
+          rej(error.target.error);
         };
       } catch (e) {
         rej(e.reason);
@@ -52,7 +58,7 @@ export class IndexDBService {
     });
   }
 
-  public add(id: string, data: any) {
+  public add(id: string, data: any): Promise<any> {
     return new Promise((res, rej) => {
       try {
         const req = this.getObjectStoreReadWrite()?.add(data, id);
@@ -60,10 +66,13 @@ export class IndexDBService {
           rej("Request failed");
         }
         req.onsuccess = (data) => {
-          res(data);
+          res(true);
+        };
+        req.onerror = (error: any) => {
+          rej(error.target.error);
         };
       } catch (e) {
-        rej(e.reason);
+        rej(e);
       }
     });
   }

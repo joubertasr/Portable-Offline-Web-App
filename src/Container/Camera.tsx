@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Grid, makeStyles, Paper, Typography } from "@material-ui/core";
 import Webcam from "react-webcam";
+import { IndexDBService } from "../Services/IndexedDB.service";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -24,6 +25,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Camera() {
+  const imageStore = new IndexDBService("POWA", "images");
   const videoConstraints = {
     width: 1280,
     height: 720,
@@ -34,11 +36,17 @@ function Camera() {
   const webcamRef = React.useRef<Webcam>(null);
 
   const [previewSrc, setPreviewSrc] = useState<string>();
-  const capture = React.useCallback(() => {
+  const capture = React.useCallback(async () => {
     if (webcamRef && webcamRef.current) {
       const imageSrc = webcamRef.current.getScreenshot();
       if (imageSrc) {
-        setPreviewSrc(imageSrc);
+        try {
+          await imageStore.add("image", { src: imageSrc });
+          const data: any = await imageStore.getDataFromStore("image");
+          setPreviewSrc(data.src);
+        } catch (e) {
+          console.log("----Error: ", e);
+        }
       }
     }
   }, [webcamRef]);
