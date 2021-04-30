@@ -13,30 +13,36 @@ import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import MenuIcon from "@material-ui/icons/Menu";
 import HomeIcon from "@material-ui/icons/Home";
+import CameraIcon from "@material-ui/icons/Camera";
 
 import "./App.scss";
 import theme from "./styles/theme";
 import Home from "./Container/Home";
+import Camera from "./Container/Camera";
 
-type IPage = "Home" | "File";
+type IPage = "Home" | "Camera";
 
 function App() {
   const [menuOpen, setMenuOpen] = useState<boolean>();
   const [page, setPage] = useState<IPage>("Home");
 
-  const pageMenuItem = (page: IPage) => (
-    <ListItem button key={"Home"}>
-      <ListItemIcon
-        onClick={() => {
-          setPage("Home");
-        }}
-      >
-        {page === "Home" && <HomeIcon />}
+  const pageMenuItem = (pageItem: IPage) => (
+    <ListItem
+      button
+      key={pageItem}
+      onClick={() => {
+        setPage(pageItem);
+        console.log("Change page to:", pageItem);
+      }}
+    >
+      <ListItemIcon>
+        {pageItem === "Home" && <HomeIcon />}
+        {pageItem === "Camera" && <CameraIcon />}
       </ListItemIcon>
-      <ListItemText primary={"Home"} />
+      <ListItemText primary={pageItem} />
     </ListItem>
   );
-  const pages: IPage[] = ["Home"];
+  const pages: IPage[] = ["Home", "Camera"];
 
   return (
     <ThemeProvider theme={theme}>
@@ -66,6 +72,7 @@ function App() {
           {pages.map((p) => pageMenuItem(p))}
         </Drawer>
         {page === "Home" && <Home />}
+        {page === "Camera" && <Camera />}
       </Container>
     </ThemeProvider>
   );
