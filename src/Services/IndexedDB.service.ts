@@ -49,12 +49,20 @@ export class IndexDBService {
         return rej("No instance");
       }
       try {
-        const req = this.getObjectStoreReadWrite().getAll();
+        const req = this.getObjectStoreReadWrite().openCursor();
         if (!req) {
           return rej("Request failed");
         }
-        req.onsuccess = (data: any) => {
-          res(data.target.result);
+
+        let data: any = [];
+        req.onsuccess = (event: any) => {
+          let cursor = event.target.result;
+          if (cursor) {
+            data.push({ ...cursor.value, key: cursor.primaryKey });
+            cursor.continue();
+          } else {
+            res(data);
+          }
         };
         req.onerror = (error: any) => {
           return rej(error.target.error);
@@ -64,10 +72,36 @@ export class IndexDBService {
       }
     });
   }
-  public getItemByIdFromStore(id: string) {
+
+  public getItemByIdFrom(id: string) {
     return new Promise((res, rej) => {
+      if (!this.instance) {
+        return rej("No instance");
+      }
       try {
         const req = this.getObjectStoreReadWrite()?.get(id);
+        if (!req) {
+          rej("Request failed");
+        }
+        req.onsuccess = (data: any) => {
+          res(data.target.result);
+        };
+        req.onerror = (error: any) => {
+          rej(error.target.error);
+        };
+      } catch (e) {
+        rej(e.reason);
+      }
+    });
+  }
+
+  public removeItemById(id: string) {
+    return new Promise((res, rej) => {
+      if (!this.instance) {
+        return rej("No instance");
+      }
+      try {
+        const req = this.getObjectStoreReadWrite()?.delete(id);
         if (!req) {
           rej("Request failed");
         }

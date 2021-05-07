@@ -42,7 +42,6 @@ export const Camera = () => {
   const webcamRef = React.useRef<Webcam>(null);
   const [images, setImages] = useState<Array<IImageItem>>([]);
 
-  const [previewSrc, setPreviewSrc] = useState<string>();
   const capture = React.useCallback(async () => {
     if (webcamRef && webcamRef.current) {
       const imageSrc = webcamRef.current.getScreenshot();
@@ -63,13 +62,11 @@ export const Camera = () => {
     imageStore
       .getDataAllFromStore()
       .then((images) => {
-        console.log("====Images", images);
         cb((images as unknown) as Array<IImageItem>);
       })
       .catch((e) => {
         const t = setTimeout(() => {
           imageStore.getDataAllFromStore().then((images) => {
-            console.log("====Images", images);
             cb((images as unknown) as Array<IImageItem>);
           });
         }, 1000);
@@ -102,16 +99,17 @@ export const Camera = () => {
           </Button>
         </Paper>
       </Grid>
-      {previewSrc && (
-        <Grid item={true} xs={4}>
-          <img
-            key={previewSrc}
-            src={previewSrc}
-            className={classes.imagePreview}
-          />
-        </Grid>
+      {images.length > 0 && (
+        <ImageRoll
+          images={images}
+          removeImage={(key) => {
+            imageStore.removeItemById(key);
+            getImages((images) => {
+              setImages(images);
+            });
+          }}
+        />
       )}
-      {images.length > 0 && <ImageRoll images={images} />}
     </Grid>
   );
 };

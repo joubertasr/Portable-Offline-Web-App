@@ -23,6 +23,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 type Props = {
   images: Array<IImageItem>;
+  removeImage: (key: string) => void;
 };
 export function ImageRoll(props: Props) {
   const styles = useStyles();
@@ -30,15 +31,14 @@ export function ImageRoll(props: Props) {
   return (
     <Grid container={true}>
       {props.images.map((image, i) => (
-        <Grid
-          key={image.src.slice(0, 10) + i}
-          item={true}
-          xs={12}
-          sm={6}
-          lg={4}
-          xl={2}
-        >
-          <img src={image.src} className={styles.imagePreview} />
+        <Grid key={image.key} item={true} xs={12} sm={6} lg={4} xl={2}>
+          <img
+            src={image.src}
+            className={styles.imagePreview}
+            onClick={() => {
+              props.removeImage(image.key);
+            }}
+          />
         </Grid>
       ))}
     </Grid>
