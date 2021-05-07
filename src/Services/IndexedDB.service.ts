@@ -39,7 +39,32 @@ export class IndexDBService {
     }
   }
 
-  public getDataFromStore(id: string) {
+  public checkInstance() {
+    return !!this.instance;
+  }
+
+  public getDataAllFromStore() {
+    return new Promise((res, rej) => {
+      if (!this.instance) {
+        return rej("No instance");
+      }
+      try {
+        const req = this.getObjectStoreReadWrite().getAll();
+        if (!req) {
+          return rej("Request failed");
+        }
+        req.onsuccess = (data: any) => {
+          res(data.target.result);
+        };
+        req.onerror = (error: any) => {
+          return rej(error.target.error);
+        };
+      } catch (e) {
+        return rej(e.reason);
+      }
+    });
+  }
+  public getItemByIdFromStore(id: string) {
     return new Promise((res, rej) => {
       try {
         const req = this.getObjectStoreReadWrite()?.get(id);
@@ -79,6 +104,7 @@ export class IndexDBService {
 
   private getObjectStoreReadWrite() {
     if (!this.instance) {
+      console.error("No DB instance");
       throw new Error("No DB instance");
     }
     const transaction = this.instance.transaction(
