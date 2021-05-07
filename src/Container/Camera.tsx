@@ -1,7 +1,13 @@
-import React, { useState } from "react";
-import { Grid, makeStyles, Paper, Typography } from "@material-ui/core";
+import React, { useEffect, useState } from "react";
+import { Button, Grid, makeStyles, Paper, Typography } from "@material-ui/core";
 import Webcam from "react-webcam";
+import { v4 as uuidv4 } from "uuid";
+import CameraIcon from "@material-ui/icons/Camera";
+
 import { IndexDBService } from "../Services/IndexedDB.service";
+import { ImageRoll } from "../Components/ImageRoll";
+
+import { IImageItem } from "../Types/ImageStore";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -24,7 +30,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function Camera() {
+export const Camera = () => {
   const imageStore = new IndexDBService("POWA", "images");
   const videoConstraints = {
     width: 1280,
@@ -34,6 +40,7 @@ function Camera() {
 
   const classes = useStyles();
   const webcamRef = React.useRef<Webcam>(null);
+  const [images, setImages] = useState<Array<IImageItem>>([]);
 
   const [previewSrc, setPreviewSrc] = useState<string>();
   const capture = React.useCallback(async () => {
@@ -41,15 +48,40 @@ function Camera() {
       const imageSrc = webcamRef.current.getScreenshot();
       if (imageSrc) {
         try {
-          await imageStore.add("image", { src: imageSrc });
-          const data: any = await imageStore.getDataFromStore("image");
-          setPreviewSrc(data.src);
+          await imageStore.add(uuidv4(), { src: imageSrc });
+          getImages((images) => {
+            setImages(images);
+          });
         } catch (e) {
           console.log("----Error: ", e);
         }
       }
     }
   }, [webcamRef]);
+
+  const getImages = (cb: (images: Array<IImageItem>) => void) => {
+    imageStore
+      .getDataAllFromStore()
+      .then((images) => {
+        console.log("====Images", images);
+        cb((images as unknown) as Array<IImageItem>);
+      })
+      .catch((e) => {
+        const t = setTimeout(() => {
+          imageStore.getDataAllFromStore().then((images) => {
+            console.log("====Images", images);
+            cb((images as unknown) as Array<IImageItem>);
+          });
+        }, 1000);
+        console.log("Problem::: ", e);
+      });
+  };
+
+  useEffect(() => {
+    getImages((images) => {
+      setImages(images);
+    });
+  }, []);
 
   return (
     <Grid container={true}>
@@ -64,16 +96,23 @@ function Camera() {
             ref={webcamRef}
             videoConstraints={videoConstraints}
             className={classes.video}
-            onClick={capture}
           />
+          <Button onClick={capture}>
+            <CameraIcon />
+          </Button>
         </Paper>
       </Grid>
       {previewSrc && (
         <Grid item={true} xs={4}>
-          <img src={previewSrc} className={classes.imagePreview} />
+          <img
+            key={previewSrc}
+            src={previewSrc}
+            className={classes.imagePreview}
+          />
         </Grid>
       )}
+      {images.length > 0 && <ImageRoll images={images} />}
     </Grid>
   );
-}
+};
 export default Camera;
