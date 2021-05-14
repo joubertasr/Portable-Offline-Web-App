@@ -19,12 +19,6 @@ const useStyles = makeStyles((theme) => ({
   upload: {
     display: "none",
   },
-  imagePreview: {
-    borderStyle: "solid",
-    borderWidth: "0.1rem",
-    borderColor: theme.palette.primary.light,
-    width: "100%",
-  },
 }));
 
 export const Upload = () => {
