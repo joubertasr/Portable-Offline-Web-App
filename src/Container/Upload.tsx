@@ -16,11 +16,8 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     flexDirection: "column",
   },
-  video: {
-    flex: 1,
-    borderStyle: "solid",
-    borderWidth: "0.5rem",
-    borderColor: theme.palette.primary.main,
+  upload: {
+    display: "none",
   },
   imagePreview: {
     borderStyle: "solid",
@@ -35,6 +32,8 @@ export const Upload = () => {
 
   const classes = useStyles();
   const [images, setImages] = useState<Array<IImageItem>>([]);
+
+  const uploadRef = React.createRef<HTMLInputElement>();
 
   const getImages = (cb: (images: Array<IImageItem>) => void) => {
     imageStore
@@ -52,10 +51,6 @@ export const Upload = () => {
       });
   };
 
-  const upload = () => {
-    console.log("Uplaod an image");
-  };
-
   const onChange = (event: React.FormEvent<HTMLInputElement>) => {
     const target = event.target as HTMLInputElement;
     var files = target.files;
@@ -68,6 +63,10 @@ export const Upload = () => {
     };
 
     files && reader.readAsDataURL(files[0]);
+  };
+
+  const upload = () => {
+    uploadRef && uploadRef.current && uploadRef.current.click();
   };
 
   useEffect(() => {
@@ -87,7 +86,13 @@ export const Upload = () => {
           <Button onClick={upload}>
             <UploadIcon />
           </Button>
-          <input type="file" onChange={onChange} accept="image/*" />
+          <input
+            className={classes.upload}
+            type="file"
+            onChange={onChange}
+            accept="image/*"
+            ref={uploadRef}
+          />
         </Paper>
       </Grid>
       {images.length > 0 && (
