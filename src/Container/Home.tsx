@@ -18,12 +18,12 @@ function Home() {
           <Typography variant="body1">
             Create an example of a web app that can be wrapped into a single
             file that has all major features of a web app including
-            <ul>
-              <li>File opening and saving</li>
-              <li>Database storage</li>
-              <li>Session state</li>
-            </ul>
           </Typography>
+          <ul>
+            <li>File opening and saving</li>
+            <li>Database storage</li>
+            <li>Session state</li>
+          </ul>
         </Paper>
       </Grid>
     </Grid>
