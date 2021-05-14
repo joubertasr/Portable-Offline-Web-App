@@ -60,9 +60,11 @@ export const Upload = () => {
     const target = event.target as HTMLInputElement;
     var files = target.files;
     var reader = new FileReader();
-    reader.onloadend = (event: Event) => {
-      // The file's text will be printed here
-      console.log("================== ONLOAD", reader.result);
+    reader.onloadend = async (event: Event) => {
+      await imageStore.add(uuidv4(), { src: reader.result });
+      getImages((images) => {
+        setImages(images);
+      });
     };
 
     files && reader.readAsDataURL(files[0]);
