@@ -21,12 +21,14 @@ import theme from "./styles/theme";
 import Home from "./Container/Home";
 import Camera from "./Container/Camera";
 import Upload from "./Container/Upload";
+import { IndexDBService } from "./Services/IndexedDB.service";
 
 type IPage = "Home" | "Camera" | "Upload";
 
 function App() {
   const [menuOpen, setMenuOpen] = useState<boolean>();
   const [page, setPage] = useState<IPage>("Home");
+  const imageStore = new IndexDBService("POWA", "images");
 
   const pageMenuItem = (pageItem: IPage) => (
     <ListItem
@@ -75,8 +77,8 @@ function App() {
           {pages.map((p) => pageMenuItem(p))}
         </Drawer>
         {page === "Home" && <Home />}
-        {page === "Camera" && <Camera />}
-        {page === "Upload" && <Upload />}
+        {page === "Camera" && <Camera imageStore={imageStore} />}
+        {page === "Upload" && <Upload imageStore={imageStore} />}
       </Container>
     </ThemeProvider>
   );

@@ -20,17 +20,18 @@ const useStyles = makeStyles((theme) => ({
     display: "none",
   },
 }));
+interface Props {
+  imageStore: IndexDBService;
+}
 
-export const Upload = () => {
-  const imageStore = new IndexDBService("POWA", "images");
-
+export const Upload = (props: Props) => {
   const classes = useStyles();
   const [images, setImages] = useState<Array<IImageItem>>([]);
 
   const uploadRef = React.createRef<HTMLInputElement>();
 
   const getImages = (cb: (images: Array<IImageItem>) => void) => {
-    imageStore
+    props.imageStore
       .getDataAllFromStore()
       .then((images) => {
         cb((images as unknown) as Array<IImageItem>);
@@ -45,7 +46,10 @@ export const Upload = () => {
     var files = target.files;
     var reader = new FileReader();
     reader.onloadend = async (event: Event) => {
-      await imageStore.add(uuidv4(), { src: reader.result });
+      if (!props.imageStore.checkInstance()) {
+        await props.imageStore.initailise();
+      }
+      await props.imageStore.add(uuidv4(), { src: reader.result });
       getImages((images) => {
         setImages(images);
       });
@@ -59,11 +63,13 @@ export const Upload = () => {
   };
 
   useEffect(() => {
-    imageStore.initailise().then(() => {
+    async function initialiseStore() {
+      await props.imageStore.initailise();
       getImages((images) => {
         setImages(images);
       });
-    });
+    }
+    initialiseStore();
   }, []);
 
   return (
@@ -89,8 +95,9 @@ export const Upload = () => {
       {images.length > 0 && (
         <ImageRoll
           images={images}
-          removeImage={(key) => {
-            imageStore.removeItemById(key);
+          removeImage={async (key) => {
+            // await imageStore.initailise();
+            props.imageStore.removeItemById(key);
             getImages((images) => {
               setImages(images);
             });

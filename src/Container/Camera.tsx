@@ -30,8 +30,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export const Camera = () => {
-  const imageStore = new IndexDBService("POWA", "images");
+interface Props {
+  imageStore: IndexDBService;
+}
+
+export const Camera = (props: Props) => {
   const videoConstraints = {
     width: 1280,
     height: 720,
@@ -47,7 +50,7 @@ export const Camera = () => {
       const imageSrc = webcamRef.current.getScreenshot();
       if (imageSrc) {
         try {
-          await imageStore.add(uuidv4(), { src: imageSrc });
+          await props.imageStore.add(uuidv4(), { src: imageSrc });
           getImages((images) => {
             setImages(images);
           });
@@ -59,7 +62,7 @@ export const Camera = () => {
   }, [webcamRef]);
 
   const getImages = (cb: (images: Array<IImageItem>) => void) => {
-    imageStore
+    props.imageStore
       .getDataAllFromStore()
       .then((images) => {
         cb((images as unknown) as Array<IImageItem>);
@@ -70,7 +73,7 @@ export const Camera = () => {
   };
 
   useEffect(() => {
-    imageStore.initailise().then(() => {
+    props.imageStore.initailise().then(() => {
       getImages((images) => {
         setImages(images);
       });
@@ -100,7 +103,7 @@ export const Camera = () => {
         <ImageRoll
           images={images}
           removeImage={(key) => {
-            imageStore.removeItemById(key);
+            props.imageStore.removeItemById(key);
             getImages((images) => {
               setImages(images);
             });

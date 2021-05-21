@@ -22,10 +22,21 @@ export class IndexDBService {
             if (e.target) {
               this.instance = e.target.result;
               resolve();
+            } else {
+              reject("No instance found");
             }
           };
           req.onupgradeneeded = (e: any) => {
-            this.checkForStore(e.target.result);
+            const version = e.oldVersion;
+            switch (version) {
+              case 0:
+                e.target.result.createObjectStore(this.storeName);
+                this.initailise();
+                break;
+              case 1:
+                console.log("Latest version");
+                break;
+            }
           };
         }
       } catch (e) {
@@ -33,20 +44,10 @@ export class IndexDBService {
       }
     });
   }
-  public checkForStore(instance: any) {
-    if (instance) {
-      try {
-        this.getObjectStoreReadWrite();
-      } catch (e) {
-        instance.createObjectStore(this.storeName);
-      }
-    }
-  }
 
   public checkInstance() {
     return !!this.instance;
   }
-
   public getDataAllFromStore() {
     return new Promise((res, rej) => {
       if (!this.instance) {
@@ -124,7 +125,7 @@ export class IndexDBService {
   public add(id: string, data: any): Promise<any> {
     return new Promise((res, rej) => {
       try {
-        const req = this.getObjectStoreReadWrite()?.add(data, id);
+        const req = this.getObjectStoreReadWrite().add(data, id);
         if (!req) {
           rej("Request failed");
         }
