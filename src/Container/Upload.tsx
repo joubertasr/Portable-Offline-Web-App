@@ -36,11 +36,6 @@ export const Upload = () => {
         cb((images as unknown) as Array<IImageItem>);
       })
       .catch((e) => {
-        const t = setTimeout(() => {
-          imageStore.getDataAllFromStore().then((images) => {
-            cb((images as unknown) as Array<IImageItem>);
-          });
-        }, 1000);
         console.log("Problem::: ", e);
       });
   };
@@ -64,8 +59,10 @@ export const Upload = () => {
   };
 
   useEffect(() => {
-    getImages((images) => {
-      setImages(images);
+    imageStore.initailise().then(() => {
+      getImages((images) => {
+        setImages(images);
+      });
     });
   }, []);
 

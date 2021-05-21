@@ -12,23 +12,27 @@ export class IndexDBService {
         "Your browser doesn't support a stable version of IndexedDB"
       );
     }
-    try {
-      const req = window.indexedDB.open(this.dbName, this.versionNumber);
-      if (req) {
-        req.onsuccess = (e: any) => {
-          if (e.target) {
-            this.instance = e.target.result;
-          }
-        };
-        req.onupgradeneeded = (e: any) => {
-          this.checkForStore(e.target.result);
-        };
-      }
-    } catch (e) {
-      throw new Error("No support for IndexedDB");
-    }
   }
-
+  public async initailise(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const req = window.indexedDB.open(this.dbName, this.versionNumber);
+        if (req) {
+          req.onsuccess = (e: any) => {
+            if (e.target) {
+              this.instance = e.target.result;
+              resolve();
+            }
+          };
+          req.onupgradeneeded = (e: any) => {
+            this.checkForStore(e.target.result);
+          };
+        }
+      } catch (e) {
+        reject(`No support for IndexedDB - ${e.message}`);
+      }
+    });
+  }
   public checkForStore(instance: any) {
     if (instance) {
       try {
