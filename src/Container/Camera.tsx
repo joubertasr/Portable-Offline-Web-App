@@ -7,7 +7,7 @@ import CameraIcon from "@material-ui/icons/Camera";
 import { IndexDBService } from "../Services/IndexedDB.service";
 import { ImageRoll } from "../Components/ImageRoll";
 
-import { IImageItem } from "../Types/ImageStore";
+import { IImageItem, IImageData } from "../Types/ImageStore";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -50,7 +50,7 @@ export const Camera = (props: Props) => {
       const imageSrc = webcamRef.current.getScreenshot();
       if (imageSrc) {
         try {
-          await props.imageStore.add(uuidv4(), { src: imageSrc });
+          await props.imageStore.add<IImageData>(uuidv4(), { src: imageSrc });
           getImages((images) => {
             setImages(images);
           });
@@ -63,9 +63,9 @@ export const Camera = (props: Props) => {
 
   const getImages = (cb: (images: Array<IImageItem>) => void) => {
     props.imageStore
-      .getDataAllFromStore()
+      .getDataAllFromStore<IImageItem>()
       .then((images) => {
-        cb((images as unknown) as Array<IImageItem>);
+        cb(images);
       })
       .catch((e) => {
         console.log("Problem::: ", e);

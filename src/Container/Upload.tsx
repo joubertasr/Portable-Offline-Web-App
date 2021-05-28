@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Button, Grid, makeStyles, Paper, Typography } from "@material-ui/core";
-import Webcam from "react-webcam";
 import { v4 as uuidv4 } from "uuid";
 import UploadIcon from "@material-ui/icons/CloudUploadRounded";
 
 import { IndexDBService } from "../Services/IndexedDB.service";
 import { ImageRoll } from "../Components/ImageRoll";
 
-import { IImageItem } from "../Types/ImageStore";
+import { IImageData, IImageItem } from "../Types/ImageStore";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -32,9 +31,9 @@ export const Upload = (props: Props) => {
 
   const getImages = (cb: (images: Array<IImageItem>) => void) => {
     props.imageStore
-      .getDataAllFromStore()
+      .getDataAllFromStore<IImageItem>()
       .then((images) => {
-        cb((images as unknown) as Array<IImageItem>);
+        cb(images);
       })
       .catch((e) => {
         console.log("Problem::: ", e);
@@ -49,10 +48,14 @@ export const Upload = (props: Props) => {
       if (!props.imageStore.checkInstance()) {
         await props.imageStore.initailise();
       }
-      await props.imageStore.add(uuidv4(), { src: reader.result });
-      getImages((images) => {
-        setImages(images);
-      });
+      if (reader.result && typeof reader.result === "string") {
+        await props.imageStore.add<IImageData>(uuidv4(), {
+          src: reader.result,
+        });
+        getImages((images) => {
+          setImages(images);
+        });
+      }
     };
 
     files && reader.readAsDataURL(files[0]);
@@ -96,7 +99,6 @@ export const Upload = (props: Props) => {
         <ImageRoll
           images={images}
           removeImage={async (key) => {
-            // await imageStore.initailise();
             props.imageStore.removeItemById(key);
             getImages((images) => {
               setImages(images);

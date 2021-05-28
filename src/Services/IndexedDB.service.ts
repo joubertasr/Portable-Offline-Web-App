@@ -48,7 +48,7 @@ export class IndexDBService {
   public checkInstance() {
     return !!this.instance;
   }
-  public getDataAllFromStore() {
+  public getDataAllFromStore<T>(): Promise<Array<T>> {
     return new Promise((res, rej) => {
       if (!this.instance) {
         return rej("No instance");
@@ -78,7 +78,7 @@ export class IndexDBService {
     });
   }
 
-  public getItemByIdFrom(id: string) {
+  public getItemByIdFrom<T>(id: string): Promise<T> {
     return new Promise((res, rej) => {
       if (!this.instance) {
         return rej("No instance");
@@ -122,7 +122,7 @@ export class IndexDBService {
     });
   }
 
-  public add(id: string, data: any): Promise<any> {
+  public add<T>(id: string, data: T): Promise<boolean> {
     return new Promise((res, rej) => {
       try {
         const req = this.getObjectStoreReadWrite().add(data, id);
