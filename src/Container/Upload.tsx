@@ -45,9 +45,6 @@ export const Upload = (props: Props) => {
     var files = target.files;
     var reader = new FileReader();
     reader.onloadend = async (event: Event) => {
-      if (!props.imageStore.checkInstance()) {
-        await props.imageStore.initailise();
-      }
       if (reader.result && typeof reader.result === "string") {
         await props.imageStore.add<IImageData>(uuidv4(), {
           src: reader.result,
