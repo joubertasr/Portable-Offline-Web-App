@@ -50,7 +50,11 @@ export const Camera = (props: Props) => {
       const imageSrc = webcamRef.current.getScreenshot();
       if (imageSrc) {
         try {
-          await props.imageStore.add<IImageData>(uuidv4(), { src: imageSrc });
+          const today = new Date();
+          await props.imageStore.add<IImageData>(uuidv4(), {
+            src: imageSrc,
+            title: `Taken on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
+          });
           getImages((images) => {
             setImages(images);
           });

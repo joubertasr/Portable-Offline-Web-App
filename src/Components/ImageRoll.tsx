@@ -1,5 +1,5 @@
 import React from "react";
-import { Grid, makeStyles } from "@material-ui/core";
+import { Grid, makeStyles, Typography } from "@material-ui/core";
 import { IImageItem } from "../Types/ImageStore";
 import RemoveIcon from "@material-ui/icons/RemoveCircleOutline";
 import DownloadIcon from "@material-ui/icons/CloudDownloadRounded";
@@ -44,6 +44,7 @@ export function ImageRoll(props: Props) {
           className={styles.itemContainer}
         >
           <div className={styles.actionContainer}>
+            <Typography color="primary">{image.title}</Typography>
             <RemoveIcon
               color="primary"
               className={styles.icon}

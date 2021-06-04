@@ -1,18 +1,30 @@
+export interface ISchema {
+  version: number;
+  structure: {
+    indexName: string;
+    keyPath: string;
+    options?: IDBIndexParameters;
+  };
+}
 export class IndexDBService {
   private instance: IDBDatabase | undefined;
   private dbName: string;
   private storeName: string;
   private versionNumber: number = 1;
+  private schema: Array<ISchema>;
 
-  constructor(databaseName: string, storeName: string) {
+  constructor(databaseName: string, storeName: string, schema: Array<ISchema>) {
     this.dbName = databaseName;
     this.storeName = storeName;
+    this.schema = schema;
+    this.versionNumber = this.schema[this.schema.length - 1].version;
     if (!window.indexedDB) {
       console.error(
         "Your browser doesn't support a stable version of IndexedDB"
       );
     }
   }
+
   public async initailise(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
@@ -27,16 +39,25 @@ export class IndexDBService {
             }
           };
           req.onupgradeneeded = (e: any) => {
+            const db = e.target.result;
             const version = e.oldVersion;
-            switch (version) {
-              case 0:
-                e.target.result.createObjectStore(this.storeName);
-                this.initailise();
-                break;
-              case 1:
-                console.log("Latest version");
-                break;
+            let objectStore: IDBObjectStore;
+            if (db.oldVersion === 0) {
+              objectStore = db.createObjectStore(this.storeName);
+            } else {
+              objectStore = e.target.transaction.objectStore(this.storeName);
             }
+
+            this.schema.forEach((schemaVersion) => {
+              if (version - 1 === schemaVersion.version) {
+                // Add the fields
+                objectStore.createIndex(
+                  schemaVersion.structure.indexName,
+                  schemaVersion.structure.keyPath,
+                  schemaVersion.structure.options
+                );
+              }
+            });
           };
         }
       } catch (e) {

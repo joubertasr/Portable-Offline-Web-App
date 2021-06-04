@@ -46,8 +46,10 @@ export const Upload = (props: Props) => {
     var reader = new FileReader();
     reader.onloadend = async (event: Event) => {
       if (reader.result && typeof reader.result === "string") {
+        const today = new Date();
         await props.imageStore.add<IImageData>(uuidv4(), {
           src: reader.result,
+          title: `Uploaded on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
         });
         getImages((images) => {
           setImages(images);
