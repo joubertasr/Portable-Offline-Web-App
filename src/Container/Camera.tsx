@@ -7,7 +7,7 @@ import CameraIcon from "@material-ui/icons/Camera";
 import { IndexDBService } from "../Services/IndexedDB.service";
 import { ImageRoll } from "../Components/ImageRoll";
 
-import { IImageItem } from "../Types/ImageStore";
+import { IImageItem, IImageData } from "../Types/ImageStore";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -30,8 +30,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export const Camera = () => {
-  const imageStore = new IndexDBService("POWA", "images");
+interface Props {
+  imageStore: IndexDBService;
+}
+
+export const Camera = (props: Props) => {
   const videoConstraints = {
     width: 1280,
     height: 720,
@@ -47,7 +50,7 @@ export const Camera = () => {
       const imageSrc = webcamRef.current.getScreenshot();
       if (imageSrc) {
         try {
-          await imageStore.add(uuidv4(), { src: imageSrc });
+          await props.imageStore.add<IImageData>(uuidv4(), { src: imageSrc });
           getImages((images) => {
             setImages(images);
           });
@@ -59,24 +62,21 @@ export const Camera = () => {
   }, [webcamRef]);
 
   const getImages = (cb: (images: Array<IImageItem>) => void) => {
-    imageStore
-      .getDataAllFromStore()
+    props.imageStore
+      .getDataAllFromStore<IImageItem>()
       .then((images) => {
-        cb((images as unknown) as Array<IImageItem>);
+        cb(images);
       })
       .catch((e) => {
-        const t = setTimeout(() => {
-          imageStore.getDataAllFromStore().then((images) => {
-            cb((images as unknown) as Array<IImageItem>);
-          });
-        }, 1000);
         console.log("Problem::: ", e);
       });
   };
 
   useEffect(() => {
-    getImages((images) => {
-      setImages(images);
+    props.imageStore.initailise().then(() => {
+      getImages((images) => {
+        setImages(images);
+      });
     });
   }, []);
 
@@ -103,7 +103,7 @@ export const Camera = () => {
         <ImageRoll
           images={images}
           removeImage={(key) => {
-            imageStore.removeItemById(key);
+            props.imageStore.removeItemById(key);
             getImages((images) => {
               setImages(images);
             });

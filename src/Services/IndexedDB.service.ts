@@ -12,38 +12,43 @@ export class IndexDBService {
         "Your browser doesn't support a stable version of IndexedDB"
       );
     }
-    try {
-      const req = window.indexedDB.open(this.dbName, this.versionNumber);
-      if (req) {
-        req.onsuccess = (e: any) => {
-          if (e.target) {
-            this.instance = e.target.result;
-          }
-        };
-        req.onupgradeneeded = (e: any) => {
-          this.checkForStore(e.target.result);
-        };
-      }
-    } catch (e) {
-      throw new Error("No support for IndexedDB");
-    }
   }
-
-  public checkForStore(instance: any) {
-    if (instance) {
+  public async initailise(): Promise<void> {
+    return new Promise((resolve, reject) => {
       try {
-        this.getObjectStoreReadWrite();
+        const req = window.indexedDB.open(this.dbName, this.versionNumber);
+        if (req) {
+          req.onsuccess = (e: any) => {
+            if (e.target) {
+              this.instance = e.target.result;
+              resolve();
+            } else {
+              reject("No instance found");
+            }
+          };
+          req.onupgradeneeded = (e: any) => {
+            const version = e.oldVersion;
+            switch (version) {
+              case 0:
+                e.target.result.createObjectStore(this.storeName);
+                this.initailise();
+                break;
+              case 1:
+                console.log("Latest version");
+                break;
+            }
+          };
+        }
       } catch (e) {
-        instance.createObjectStore(this.storeName);
+        reject(`No support for IndexedDB - ${e.message}`);
       }
-    }
+    });
   }
 
   public checkInstance() {
     return !!this.instance;
   }
-
-  public getDataAllFromStore() {
+  public getDataAllFromStore<T>(): Promise<Array<T>> {
     return new Promise((res, rej) => {
       if (!this.instance) {
         return rej("No instance");
@@ -73,7 +78,7 @@ export class IndexDBService {
     });
   }
 
-  public getItemByIdFrom(id: string) {
+  public getItemByIdFrom<T>(id: string): Promise<T> {
     return new Promise((res, rej) => {
       if (!this.instance) {
         return rej("No instance");
@@ -117,10 +122,10 @@ export class IndexDBService {
     });
   }
 
-  public add(id: string, data: any): Promise<any> {
+  public add<T>(id: string, data: T): Promise<boolean> {
     return new Promise((res, rej) => {
       try {
-        const req = this.getObjectStoreReadWrite()?.add(data, id);
+        const req = this.getObjectStoreReadWrite().add(data, id);
         if (!req) {
           rej("Request failed");
         }

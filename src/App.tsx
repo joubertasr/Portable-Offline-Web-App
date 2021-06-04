@@ -14,17 +14,21 @@ import ListItemText from "@material-ui/core/ListItemText";
 import MenuIcon from "@material-ui/icons/Menu";
 import HomeIcon from "@material-ui/icons/Home";
 import CameraIcon from "@material-ui/icons/Camera";
+import UploadIcon from "@material-ui/icons/CloudUploadRounded";
 
 import "./App.scss";
 import theme from "./styles/theme";
 import Home from "./Container/Home";
 import Camera from "./Container/Camera";
+import Upload from "./Container/Upload";
+import { IndexDBService } from "./Services/IndexedDB.service";
 
-type IPage = "Home" | "Camera";
+type IPage = "Home" | "Camera" | "Upload";
 
 function App() {
   const [menuOpen, setMenuOpen] = useState<boolean>();
   const [page, setPage] = useState<IPage>("Home");
+  const imageStore = new IndexDBService("POWA", "images");
 
   const pageMenuItem = (pageItem: IPage) => (
     <ListItem
@@ -38,11 +42,12 @@ function App() {
       <ListItemIcon>
         {pageItem === "Home" && <HomeIcon />}
         {pageItem === "Camera" && <CameraIcon />}
+        {pageItem === "Upload" && <UploadIcon />}
       </ListItemIcon>
       <ListItemText primary={pageItem} />
     </ListItem>
   );
-  const pages: IPage[] = ["Home", "Camera"];
+  const pages: IPage[] = ["Home", "Camera", "Upload"];
 
   return (
     <ThemeProvider theme={theme}>
@@ -72,7 +77,8 @@ function App() {
           {pages.map((p) => pageMenuItem(p))}
         </Drawer>
         {page === "Home" && <Home />}
-        {page === "Camera" && <Camera />}
+        {page === "Camera" && <Camera imageStore={imageStore} />}
+        {page === "Upload" && <Upload imageStore={imageStore} />}
       </Container>
     </ThemeProvider>
   );
