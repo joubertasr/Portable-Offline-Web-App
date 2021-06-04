@@ -120,6 +120,27 @@ export class IndexDBService {
       }
     });
   }
+  public updateItemById<T>(id: string, item: T): Promise<Boolean> {
+    return new Promise((res, rej) => {
+      if (!this.instance) {
+        return rej("No instance");
+      }
+      try {
+        const req = this.getObjectStoreReadWrite()?.put(item, id);
+        if (!req) {
+          rej("Request failed");
+        }
+        req.onsuccess = (data: any) => {
+          res(true);
+        };
+        req.onerror = (error: any) => {
+          rej(error.target.error);
+        };
+      } catch (e) {
+        rej(e.reason);
+      }
+    });
+  }
 
   public removeItemById(id: string) {
     return new Promise((res, rej) => {

@@ -103,6 +103,10 @@ export const Upload = (props: Props) => {
               setImages(images);
             });
           }}
+          updateTitle={(key, title) => {
+            const imageDetails = images.filter((i) => i.key === key).pop();
+            props.imageStore.updateItemById(key, { ...imageDetails, title });
+          }}
         />
       )}
     </Grid>

@@ -112,6 +112,14 @@ export const Camera = (props: Props) => {
               setImages(images);
             });
           }}
+          updateTitle={(key, title) => {
+            const imageDetails = images.filter((i) => i.key === key).pop();
+            console.log("ImageDetails", imageDetails);
+            props.imageStore.updateItemById(key, { ...imageDetails, title });
+            getImages((images) => {
+              setImages(images);
+            });
+          }}
         />
       )}
     </Grid>

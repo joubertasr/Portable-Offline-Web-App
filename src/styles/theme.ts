@@ -11,6 +11,13 @@ const theme = createMuiTheme({
       main: lightBlue[500],
     },
   },
+  overrides: {
+    MuiInputBase: {
+      input: {
+        color: blue[500],
+      },
+    },
+  },
 });
 
 export default responsiveFontSizes(theme);
