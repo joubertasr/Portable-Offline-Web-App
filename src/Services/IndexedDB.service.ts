@@ -84,7 +84,7 @@ export class IndexDBService {
         req.onsuccess = (event: any) => {
           let cursor = event.target.result;
           if (cursor) {
-            data.push({ ...cursor.value, key: cursor.primaryKey });
+            data.push({ key: cursor.primaryKey, data: cursor.value });
             cursor.continue();
           } else {
             res(data);
@@ -99,7 +99,7 @@ export class IndexDBService {
     });
   }
 
-  public getItemByIdFrom<T>(id: string): Promise<T> {
+  public getItemById<T>(id: string): Promise<{ key: string; data: T }> {
     return new Promise((res, rej) => {
       if (!this.instance) {
         return rej("No instance");
@@ -109,8 +109,10 @@ export class IndexDBService {
         if (!req) {
           rej("Request failed");
         }
+
         req.onsuccess = (data: any) => {
-          res(data.target.result);
+          const result = { key: id, data: data.target.result };
+          res(result);
         };
         req.onerror = (error: any) => {
           rej(error.target.error);
