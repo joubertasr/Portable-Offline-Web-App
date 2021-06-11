@@ -106,11 +106,11 @@ export function ImageItem(props: ImageProps) {
             color="primary"
             onClick={() => {
               setShowEdit(true);
-              setTitle(image.title);
+              setTitle(image.data.title);
             }}
             className={styles.imageTitle}
           >
-            {image.title}
+            {image.data.title}
           </Typography>
         )}
         <RemoveIcon
@@ -120,11 +120,11 @@ export function ImageItem(props: ImageProps) {
             props.removeImage(image.key);
           }}
         />
-        <a href={`${image.src}`} download={`POWA-image-${image.key}.jpg`}>
+        <a href={`${image.data.src}`} download={`POWA-image-${image.key}.jpg`}>
           <DownloadIcon color="primary" className={styles.icon} />
         </a>
       </div>
-      <img src={image.src} className={styles.imagePreview} />
+      <img src={image.data.src} className={styles.imagePreview} />
     </Grid>
   );
 }

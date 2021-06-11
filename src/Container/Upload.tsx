@@ -103,9 +103,23 @@ export const Upload = (props: Props) => {
               setImages(images);
             });
           }}
-          updateTitle={(key, title) => {
+          updateTitle={async (key, title) => {
             const imageDetails = images.filter((i) => i.key === key).pop();
-            props.imageStore.updateItemById(key, { ...imageDetails, title });
+            if (imageDetails) {
+              props.imageStore.updateItemById<IImageData>(imageDetails.key, {
+                ...imageDetails.data,
+                title,
+              });
+
+              const updatedImage = await props.imageStore.getItemById<IImageData>(
+                key
+              );
+              setImages(
+                images.map((i) => {
+                  return i.key === key ? updatedImage : i;
+                })
+              );
+            }
           }}
         />
       )}
