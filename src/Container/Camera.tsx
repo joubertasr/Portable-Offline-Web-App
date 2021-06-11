@@ -114,11 +114,13 @@ export const Camera = (props: Props) => {
           }}
           updateTitle={(key, title) => {
             const imageDetails = images.filter((i) => i.key === key).pop();
-            console.log("ImageDetails", imageDetails);
-            props.imageStore.updateItemById(key, { ...imageDetails, title });
-            getImages((images) => {
-              setImages(images);
-            });
+            if (imageDetails) {
+              const imageData = { src: imageDetails.src, title } as IImageData;
+              props.imageStore.updateItemById(key, imageData);
+              getImages((images) => {
+                setImages(images);
+              });
+            }
           }}
         />
       )}
