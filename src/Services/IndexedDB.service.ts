@@ -81,7 +81,7 @@ export class IndexDBService {
     return !!this.instance;
   }
 
-  public getAllDataFromStore<T>(): Promise<Array<T>> {
+  public getAllDataFromStore<T>(): Promise<Array<{ key: string; data: T }>> {
     return new Promise((res, rej) => {
       if (!this.instance) {
         return rej("No instance");
@@ -92,7 +92,7 @@ export class IndexDBService {
           return rej("Request failed");
         }
 
-        let data: any = [];
+        let data: Array<{ key: string; data: T }> = [];
         req.onsuccess = (event: any) => {
           let cursor = event.target.result;
           if (cursor) {
