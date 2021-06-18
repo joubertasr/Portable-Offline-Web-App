@@ -43,7 +43,7 @@ export class IndexDBService {
             const db = e.target.result;
             const version = e.oldVersion;
             let objectStore: IDBObjectStore;
-            if (db.oldVersion === 0) {
+            if (db.oldVersion === 0 || !db.oldVersion) {
               objectStore = db.createObjectStore(this.storeName);
             } else {
               objectStore = e.target.transaction.objectStore(this.storeName);
