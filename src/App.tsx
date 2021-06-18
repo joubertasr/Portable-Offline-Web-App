@@ -31,17 +31,20 @@ function App() {
   const imageSchema: Array<ISchema> = [
     {
       version: 1,
-      structure: {
-        indexName: "src",
-        keyPath: "src",
-      },
+      indexes: [],
     },
     {
       version: 2,
-      structure: {
-        indexName: "title",
-        keyPath: "title",
-      },
+      indexes: [],
+    },
+    {
+      version: 3,
+      indexes: [
+        {
+          indexName: "tag",
+          keyPath: "tag",
+        },
+      ],
     },
   ];
   const imageStore = new IndexDBService("POWA", "images", imageSchema);

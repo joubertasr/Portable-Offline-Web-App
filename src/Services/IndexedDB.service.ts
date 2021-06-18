@@ -1,10 +1,10 @@
 export interface ISchema {
   version: number;
-  structure: {
+  indexes: Array<{
     indexName: string;
     keyPath: string;
     options?: IDBIndexParameters;
-  };
+  }>;
 }
 export class IndexDBService {
   private instance: IDBDatabase | undefined;
@@ -12,6 +12,7 @@ export class IndexDBService {
   private storeName: string;
   private versionNumber: number = 1;
   private schema: Array<ISchema>;
+  private indexes: Array<{ name: string; index: IDBIndex }> = [];
 
   constructor(databaseName: string, storeName: string, schema: Array<ISchema>) {
     this.dbName = databaseName;
@@ -33,6 +34,17 @@ export class IndexDBService {
           req.onsuccess = (e: any) => {
             if (e.target) {
               this.instance = e.target.result;
+
+              for (const version of this.schema) {
+                for (const index of version.indexes) {
+                  this.indexes.push({
+                    name: index.indexName,
+                    index: this.getObjectStoreReadWrite().index(
+                      index.indexName
+                    ),
+                  });
+                }
+              }
               resolve();
             } else {
               reject("No instance found");
@@ -50,12 +62,11 @@ export class IndexDBService {
 
             this.schema.forEach((schemaVersion) => {
               if (version - 1 === schemaVersion.version) {
-                // Add the fields
-                objectStore.createIndex(
-                  schemaVersion.structure.indexName,
-                  schemaVersion.structure.keyPath,
-                  schemaVersion.structure.options
-                );
+                // Add the indexes
+                for (const index of schemaVersion.indexes) {
+                  const { indexName, keyPath, options } = index;
+                  objectStore.createIndex(indexName, keyPath, options);
+                }
               }
             });
           };
@@ -69,6 +80,7 @@ export class IndexDBService {
   public checkInstance() {
     return !!this.instance;
   }
+  
   public getDataAllFromStore<T>(): Promise<Array<T>> {
     return new Promise((res, rej) => {
       if (!this.instance) {
