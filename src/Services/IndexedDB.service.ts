@@ -34,17 +34,6 @@ export class IndexDBService {
           req.onsuccess = (e: any) => {
             if (e.target) {
               this.instance = e.target.result;
-
-              for (const version of this.schema) {
-                for (const index of version.indexes) {
-                  this.indexes.push({
-                    name: index.indexName,
-                    index: this.getObjectStoreReadWrite().index(
-                      index.indexName
-                    ),
-                  });
-                }
-              }
               resolve();
             } else {
               reject("No instance found");
@@ -65,7 +54,10 @@ export class IndexDBService {
                 // Add the indexes
                 for (const index of schemaVersion.indexes) {
                   const { indexName, keyPath, options } = index;
-                  objectStore.createIndex(indexName, keyPath, options);
+                  this.indexes.push({
+                    name: index.indexName,
+                    index: objectStore.createIndex(indexName, keyPath, options),
+                  });
                 }
               }
             });
