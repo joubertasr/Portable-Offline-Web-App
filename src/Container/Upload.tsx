@@ -46,8 +46,10 @@ export const Upload = (props: Props) => {
     var reader = new FileReader();
     reader.onloadend = async (event: Event) => {
       if (reader.result && typeof reader.result === "string") {
+        const today = new Date();
         await props.imageStore.add<IImageData>(uuidv4(), {
           src: reader.result,
+          title: `Uploaded on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
         });
         getImages((images) => {
           setImages(images);
@@ -100,6 +102,24 @@ export const Upload = (props: Props) => {
             getImages((images) => {
               setImages(images);
             });
+          }}
+          updateTitle={async (key, title) => {
+            const imageDetails = images.filter((i) => i.key === key).pop();
+            if (imageDetails) {
+              props.imageStore.updateItemById<IImageData>(imageDetails.key, {
+                ...imageDetails.data,
+                title,
+              });
+
+              const updatedImage = await props.imageStore.getItemById<IImageData>(
+                key
+              );
+              setImages(
+                images.map((i) => {
+                  return i.key === key ? updatedImage : i;
+                })
+              );
+            }
           }}
         />
       )}

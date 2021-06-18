@@ -50,7 +50,11 @@ export const Camera = (props: Props) => {
       const imageSrc = webcamRef.current.getScreenshot();
       if (imageSrc) {
         try {
-          await props.imageStore.add<IImageData>(uuidv4(), { src: imageSrc });
+          const today = new Date();
+          await props.imageStore.add<IImageData>(uuidv4(), {
+            src: imageSrc,
+            title: `Taken on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
+          });
           getImages((images) => {
             setImages(images);
           });
@@ -107,6 +111,18 @@ export const Camera = (props: Props) => {
             getImages((images) => {
               setImages(images);
             });
+          }}
+          updateTitle={(key, title) => {
+            const imageDetails = images.filter((i) => i.key === key).pop();
+            if (imageDetails) {
+              props.imageStore.updateItemById<IImageData>(imageDetails.key, {
+                ...imageDetails.data,
+                title,
+              });
+              getImages((images) => {
+                setImages(images);
+              });
+            }
           }}
         />
       )}

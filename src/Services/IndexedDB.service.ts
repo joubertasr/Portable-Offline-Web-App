@@ -1,18 +1,30 @@
+export interface ISchema {
+  version: number;
+  structure: {
+    indexName: string;
+    keyPath: string;
+    options?: IDBIndexParameters;
+  };
+}
 export class IndexDBService {
   private instance: IDBDatabase | undefined;
   private dbName: string;
   private storeName: string;
   private versionNumber: number = 1;
+  private schema: Array<ISchema>;
 
-  constructor(databaseName: string, storeName: string) {
+  constructor(databaseName: string, storeName: string, schema: Array<ISchema>) {
     this.dbName = databaseName;
     this.storeName = storeName;
+    this.schema = schema;
+    this.versionNumber = this.schema[this.schema.length - 1].version;
     if (!window.indexedDB) {
       console.error(
         "Your browser doesn't support a stable version of IndexedDB"
       );
     }
   }
+
   public async initailise(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
@@ -27,16 +39,25 @@ export class IndexDBService {
             }
           };
           req.onupgradeneeded = (e: any) => {
+            const db = e.target.result;
             const version = e.oldVersion;
-            switch (version) {
-              case 0:
-                e.target.result.createObjectStore(this.storeName);
-                this.initailise();
-                break;
-              case 1:
-                console.log("Latest version");
-                break;
+            let objectStore: IDBObjectStore;
+            if (db.oldVersion === 0) {
+              objectStore = db.createObjectStore(this.storeName);
+            } else {
+              objectStore = e.target.transaction.objectStore(this.storeName);
             }
+
+            this.schema.forEach((schemaVersion) => {
+              if (version - 1 === schemaVersion.version) {
+                // Add the fields
+                objectStore.createIndex(
+                  schemaVersion.structure.indexName,
+                  schemaVersion.structure.keyPath,
+                  schemaVersion.structure.options
+                );
+              }
+            });
           };
         }
       } catch (e) {
@@ -63,7 +84,7 @@ export class IndexDBService {
         req.onsuccess = (event: any) => {
           let cursor = event.target.result;
           if (cursor) {
-            data.push({ ...cursor.value, key: cursor.primaryKey });
+            data.push({ key: cursor.primaryKey, data: cursor.value });
             cursor.continue();
           } else {
             res(data);
@@ -78,7 +99,7 @@ export class IndexDBService {
     });
   }
 
-  public getItemByIdFrom<T>(id: string): Promise<T> {
+  public getItemById<T>(id: string): Promise<{ key: string; data: T }> {
     return new Promise((res, rej) => {
       if (!this.instance) {
         return rej("No instance");
@@ -88,8 +109,31 @@ export class IndexDBService {
         if (!req) {
           rej("Request failed");
         }
+
         req.onsuccess = (data: any) => {
-          res(data.target.result);
+          const result = { key: id, data: data.target.result };
+          res(result);
+        };
+        req.onerror = (error: any) => {
+          rej(error.target.error);
+        };
+      } catch (e) {
+        rej(e.reason);
+      }
+    });
+  }
+  public updateItemById<T>(id: string, item: T): Promise<Boolean> {
+    return new Promise((res, rej) => {
+      if (!this.instance) {
+        return rej("No instance");
+      }
+      try {
+        const req = this.getObjectStoreReadWrite()?.put(item, id);
+        if (!req) {
+          rej("Request failed");
+        }
+        req.onsuccess = (data: any) => {
+          res(true);
         };
         req.onerror = (error: any) => {
           rej(error.target.error);
