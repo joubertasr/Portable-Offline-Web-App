@@ -111,6 +111,43 @@ export class IndexDBService {
     });
   }
 
+  public getDataUsingIndexByKey<T>(
+    indexName: string,
+    key: string
+  ): Promise<Array<{ key: string; data: T }>> {
+    return new Promise((res, rej) => {
+      if (!this.instance) {
+        return rej("No instance");
+      }
+      try {
+        const index = this.indexes.filter((i) => i.name === indexName).pop();
+        if (!index) {
+          return rej(`Missing index: ${indexName}`);
+        }
+
+        const indexInstance = this.getObjectStoreReadWrite().index(index.name);
+
+        let data: Array<{ key: string; data: T }> = [];
+        const indexCursor = indexInstance.get(key);
+
+        indexCursor.onsuccess = (event: any) => {
+          let cursor = event.target.result;
+          if (cursor) {
+            data.push({ key: cursor.primaryKey, data: cursor.value });
+            cursor.continue();
+          } else {
+            res(data);
+          }
+        };
+        indexCursor.onerror = (error: any) => {
+          return rej(error.target.error);
+        };
+      } catch (e) {
+        return rej(e.reason);
+      }
+    });
+  }
+
   public getItemById<T>(id: string): Promise<{ key: string; data: T }> {
     return new Promise((res, rej) => {
       if (!this.instance) {
