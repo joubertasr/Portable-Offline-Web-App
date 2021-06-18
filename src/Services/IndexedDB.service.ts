@@ -80,8 +80,8 @@ export class IndexDBService {
   public checkInstance() {
     return !!this.instance;
   }
-  
-  public getDataAllFromStore<T>(): Promise<Array<T>> {
+
+  public getAllDataFromStore<T>(): Promise<Array<T>> {
     return new Promise((res, rej) => {
       if (!this.instance) {
         return rej("No instance");

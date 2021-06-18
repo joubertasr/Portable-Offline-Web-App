@@ -67,7 +67,7 @@ export const Camera = (props: Props) => {
 
   const getImages = (cb: (images: Array<IImageItem>) => void) => {
     props.imageStore
-      .getDataAllFromStore<IImageItem>()
+      .getAllDataFromStore<IImageItem>()
       .then((images) => {
         cb(images);
       })
