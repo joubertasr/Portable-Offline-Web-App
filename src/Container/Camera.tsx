@@ -85,7 +85,7 @@ export const Camera = (props: Props) => {
   }, []);
 
   return (
-    <Grid container={true}>
+    <Grid container={true} spacing={2}>
       <Grid item={true} xs={12}>
         <Paper className={classes.paper}>
           <Typography variant="h1">Camera</Typography>
@@ -104,27 +104,29 @@ export const Camera = (props: Props) => {
         </Paper>
       </Grid>
       {images.length > 0 && (
-        <ImageRoll
-          images={images}
-          removeImage={(key) => {
-            props.imageStore.removeItemById(key);
-            getImages((images) => {
-              setImages(images);
-            });
-          }}
-          updateTitle={(key, title) => {
-            const imageDetails = images.filter((i) => i.key === key).pop();
-            if (imageDetails) {
-              props.imageStore.updateItemById<IImageData>(imageDetails.key, {
-                ...imageDetails.data,
-                title,
-              });
+        <Grid item={true} xs={12}>
+          <ImageRoll
+            images={images}
+            removeImage={(key) => {
+              props.imageStore.removeItemById(key);
               getImages((images) => {
                 setImages(images);
               });
-            }
-          }}
-        />
+            }}
+            updateTitle={(key, title) => {
+              const imageDetails = images.filter((i) => i.key === key).pop();
+              if (imageDetails) {
+                props.imageStore.updateItemById<IImageData>(imageDetails.key, {
+                  ...imageDetails.data,
+                  title,
+                });
+                getImages((images) => {
+                  setImages(images);
+                });
+              }
+            }}
+          />
+        </Grid>
       )}
     </Grid>
   );

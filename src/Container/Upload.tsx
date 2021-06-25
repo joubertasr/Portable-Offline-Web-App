@@ -75,7 +75,7 @@ export const Upload = (props: Props) => {
   }, []);
 
   return (
-    <Grid container={true}>
+    <Grid container={true} spacing={2}>
       <Grid item={true} xs={12}>
         <Paper className={classes.paper}>
           <Typography variant="h1">Upload</Typography>
@@ -95,33 +95,34 @@ export const Upload = (props: Props) => {
         </Paper>
       </Grid>
       {images.length > 0 && (
-        <ImageRoll
-          images={images}
-          removeImage={async (key) => {
-            props.imageStore.removeItemById(key);
-            getImages((images) => {
-              setImages(images);
-            });
-          }}
-          updateTitle={async (key, title) => {
-            const imageDetails = images.filter((i) => i.key === key).pop();
-            if (imageDetails) {
-              props.imageStore.updateItemById<IImageData>(imageDetails.key, {
-                ...imageDetails.data,
-                title,
+        <Grid item={true} xs={12}>
+          <ImageRoll
+            images={images}
+            removeImage={async (key) => {
+              props.imageStore.removeItemById(key);
+              getImages((images) => {
+                setImages(images);
               });
+            }}
+            updateTitle={async (key, title) => {
+              const imageDetails = images.filter((i) => i.key === key).pop();
+              if (imageDetails) {
+                props.imageStore.updateItemById<IImageData>(imageDetails.key, {
+                  ...imageDetails.data,
+                  title,
+                });
 
-              const updatedImage = await props.imageStore.getItemById<IImageData>(
-                key
-              );
-              setImages(
-                images.map((i) => {
-                  return i.key === key ? updatedImage : i;
-                })
-              );
-            }
-          }}
-        />
+                const updatedImage =
+                  await props.imageStore.getItemById<IImageData>(key);
+                setImages(
+                  images.map((i) => {
+                    return i.key === key ? updatedImage : i;
+                  })
+                );
+              }
+            }}
+          />
+        </Grid>
       )}
     </Grid>
   );

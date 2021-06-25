@@ -5,11 +5,17 @@ import {
   makeStyles,
   TextField,
   Typography,
+  Card,
+  CardActions,
+  CardContent,
+  CardMedia,
+  Box,
 } from "@material-ui/core";
 import { IImageItem } from "../Types/ImageStore";
 import RemoveIcon from "@material-ui/icons/RemoveCircleOutline";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import DownloadIcon from "@material-ui/icons/CloudDownloadRounded";
+import { red } from "@material-ui/core/colors";
 const useStyles = makeStyles((theme) => ({
   icon: {
     cursor: "pointer",
@@ -26,18 +32,18 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "center",
   },
-  actionContainer: {
-    position: "absolute",
-    justifyContent: "center",
-    alignItems: "center",
-    width: `calc(100% - ${theme.spacing(2)}px)`,
-    display: "flex",
-    flexWrap: "wrap",
-    padding: theme.spacing(1),
-  },
   imageTitle: {
     cursor: "pointer",
     textAlign: "center",
+  },
+  editField: {
+    flexGrow: 1,
+  },
+  dangerButton: {
+    color: red[200],
+  },
+  fullHeightCard: {
+    height: "100%",
   },
 }));
 type Props = {
@@ -46,14 +52,25 @@ type Props = {
   updateTitle: (key: string, title: string) => void;
 };
 export function ImageRoll(props: Props) {
+  const styles = useStyles();
   return (
-    <Grid container={true}>
+    <Grid container={true} spacing={1}>
       {props.images.map((image, i) => (
-        <ImageItem
-          details={image}
-          removeImage={props.removeImage}
-          updateTitle={props.updateTitle}
-        />
+        <Grid
+          key={image.key}
+          item={true}
+          xs={12}
+          sm={6}
+          lg={4}
+          xl={3}
+          className={styles.itemContainer}
+        >
+          <ImageItem
+            details={image}
+            removeImage={props.removeImage}
+            updateTitle={props.updateTitle}
+          />
+        </Grid>
       ))}
     </Grid>
   );
@@ -65,23 +82,16 @@ type ImageProps = {
   updateTitle: (key: string, title: string) => void;
 };
 export function ImageItem(props: ImageProps) {
-  const styles = useStyles();
   const image = props.details;
   const [showEdit, setShowEdit] = useState<boolean>(false);
-  const [title, setTitle] = useState<string>("");
+  const [title, setTitle] = useState<string>(image.data.title);
+  const styles = useStyles();
   return (
-    <Grid
-      key={image.key}
-      item={true}
-      xs={12}
-      sm={6}
-      lg={4}
-      xl={2}
-      className={styles.itemContainer}
-    >
-      <div className={styles.actionContainer}>
+    <Card className={styles.fullHeightCard}>
+      <CardMedia component="img" src={image.data.src} title={title} />
+      <CardContent>
         {showEdit ? (
-          <div>
+          <Box display="flex">
             <TextField
               type="text"
               value={title}
@@ -89,6 +99,7 @@ export function ImageItem(props: ImageProps) {
                 setTitle(e.target.value);
               }}
               color="primary"
+              className={styles.editField}
             />
             <Button
               onClick={() => {
@@ -100,31 +111,39 @@ export function ImageItem(props: ImageProps) {
             >
               <CheckCircleIcon />
             </Button>
-          </div>
+          </Box>
         ) : (
-          <Typography
-            color="primary"
-            onClick={() => {
-              setShowEdit(true);
-              setTitle(image.data.title);
-            }}
-            className={styles.imageTitle}
-          >
-            {image.data.title}
+          <Typography gutterBottom component="h3">
+            {title}
           </Typography>
         )}
-        <RemoveIcon
+      </CardContent>
+      <CardActions>
+        <Button
+          size="small"
           color="primary"
-          className={styles.icon}
+          onClick={() => {
+            setShowEdit(!showEdit);
+          }}
+        >
+          Rename
+        </Button>
+        <Button size="small" color="secondary">
+          Tags
+        </Button>
+        <Button
+          size="small"
+          className={styles.dangerButton}
           onClick={() => {
             props.removeImage(image.key);
           }}
-        />
+        >
+          <RemoveIcon color="inherit" />
+        </Button>
         <a href={`${image.data.src}`} download={`POWA-image-${image.key}.jpg`}>
           <DownloadIcon color="primary" className={styles.icon} />
         </a>
-      </div>
-      <img src={image.data.src} className={styles.imagePreview} />
-    </Grid>
+      </CardActions>
+    </Card>
   );
 }
