@@ -10,10 +10,16 @@ import {
   CardContent,
   CardMedia,
   Box,
+  Popover,
+  Paper,
+  FormGroup,
+  Input,
+  Chip,
 } from "@material-ui/core";
 import { IImageItem } from "../Types/ImageStore";
 import RemoveIcon from "@material-ui/icons/RemoveCircleOutline";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
+import AddCircleIcon from "@material-ui/icons/AddCircle";
 import DownloadIcon from "@material-ui/icons/CloudDownloadRounded";
 import { red } from "@material-ui/core/colors";
 const useStyles = makeStyles((theme) => ({
@@ -85,7 +91,12 @@ export function ImageItem(props: ImageProps) {
   const image = props.details;
   const [showEdit, setShowEdit] = useState<boolean>(false);
   const [title, setTitle] = useState<string>(image.data.title);
+  const [open, setOpen] = useState<boolean>(false);
+  const [anchorEl, setAnchorEl] = useState<any>();
+  const [tagText, setTagText] = useState<string>("");
   const styles = useStyles();
+
+  const [tags, setTags] = useState<string[]>(["Hello", "world"]);
   return (
     <Card className={styles.fullHeightCard}>
       <CardMedia component="img" src={image.data.src} title={title} />
@@ -118,6 +129,21 @@ export function ImageItem(props: ImageProps) {
           </Typography>
         )}
       </CardContent>
+      {tags && (
+        <CardActions>
+          {tags.map((tag) => (
+            <Chip
+              label={tag}
+              onDelete={() => {
+                console.log("Remove tag", tag);
+                setTags(tags.filter((t) => t !== tag));
+              }}
+              color="primary"
+              size="small"
+            />
+          ))}
+        </CardActions>
+      )}
       <CardActions>
         <Button
           size="small"
@@ -128,8 +154,15 @@ export function ImageItem(props: ImageProps) {
         >
           Rename
         </Button>
-        <Button size="small" color="secondary">
-          Tags
+        <Button
+          size="small"
+          color="secondary"
+          onClick={(e) => {
+            e.currentTarget && setAnchorEl(e.currentTarget);
+            setOpen(!open);
+          }}
+        >
+          Add Tag
         </Button>
         <Button
           size="small"
@@ -144,6 +177,48 @@ export function ImageItem(props: ImageProps) {
           <DownloadIcon color="primary" className={styles.icon} />
         </a>
       </CardActions>
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "left",
+        }}
+        onClose={() => setOpen(false)}
+        disableRestoreFocus
+      >
+        <Box
+          flex={1}
+          flexDirection="row"
+          display="flex"
+          alignItems="center"
+          p={1}
+        >
+          <TextField
+            label="Tag"
+            variant="outlined"
+            value={tagText}
+            onChange={(e) => {
+              setTagText(e.target.value);
+            }}
+          />
+          <Box px={2}>
+            <Button
+              onClick={() => {
+                console.log("Add tag", tagText);
+                setTagText("");
+                setTags([...tags, tagText]);
+              }}
+            >
+              <AddCircleIcon />
+            </Button>
+          </Box>
+        </Box>
+      </Popover>
     </Card>
   );
 }
