@@ -4,10 +4,12 @@ import Webcam from "react-webcam";
 import { v4 as uuidv4 } from "uuid";
 import CameraIcon from "@material-ui/icons/Camera";
 
-import { IndexDBService } from "../Services/IndexedDB.service";
 import { ImageRoll } from "../Components/ImageRoll";
 
 import { IImageItem, IImageData } from "../Types/ImageStore";
+import imageStore from "../Stores/ImageStore";
+import { ITagData, ITagItem } from "../Types/TagStore";
+import { IndexDBStore } from "../Services/IndexedDB.service";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -30,11 +32,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {
-  imageStore: IndexDBService;
-}
-
-export const Camera = (props: Props) => {
+export const Camera = () => {
   const videoConstraints = {
     width: 1280,
     height: 720,
@@ -44,6 +42,7 @@ export const Camera = (props: Props) => {
   const classes = useStyles();
   const webcamRef = React.useRef<Webcam>(null);
   const [images, setImages] = useState<Array<IImageItem>>([]);
+  const [tags, setTags] = useState<Array<ITagItem>>([]);
 
   const capture = React.useCallback(async () => {
     if (webcamRef && webcamRef.current) {
@@ -51,13 +50,13 @@ export const Camera = (props: Props) => {
       if (imageSrc) {
         try {
           const today = new Date();
-          await props.imageStore.add<IImageData>(uuidv4(), {
-            src: imageSrc,
-            title: `Taken on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
-          });
-          getImages((images) => {
-            setImages(images);
-          });
+          await imageStore().then((iStore) =>
+            iStore.add<IImageData>(uuidv4(), {
+              src: imageSrc,
+              title: `Taken on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
+            })
+          );
+          setImages(await getImages());
         } catch (e) {
           console.log("----Error: ", e);
         }
@@ -65,23 +64,36 @@ export const Camera = (props: Props) => {
     }
   }, [webcamRef]);
 
-  const getImages = (cb: (images: Array<IImageItem>) => void) => {
-    props.imageStore
-      .getAllDataFromStore<IImageData>()
-      .then((images: IImageItem[]) => {
-        cb(images);
-      })
-      .catch((e) => {
-        console.log("Problem::: ", e);
-      });
+  const getImages = async (): Promise<IImageItem[]> => {
+    return await imageStore().then((iStore) =>
+      iStore.getAllDataFromStore<IImageData>()
+    );
+  };
+
+  const getTags = (cb: (images: Array<ITagItem>) => void) => {
+    // tagStore
+    //   .getAllDataFromStore<ITagData>()
+    //   .then((tags: ITagItem[]) => {
+    //     cb(tags);
+    //   })
+    //   .catch((e) => {
+    //     console.log("Problem::: ", e);
+    //   });
+  };
+
+  const addTag = (imageKey: string, value: string) => {
+    console.log("Save TAG:", imageKey, value);
+    // tagStore.add(uuidv4(), {
+    //   imageKey,
+    //   value,
+    // });
   };
 
   useEffect(() => {
-    props.imageStore.initailise().then(() => {
-      getImages((images) => {
-        setImages(images);
-      });
-    });
+    async function initialiseStore() {
+      setImages(await getImages());
+    }
+    initialiseStore();
   }, []);
 
   return (
@@ -106,23 +118,23 @@ export const Camera = (props: Props) => {
       {images.length > 0 && (
         <Grid item={true} xs={12}>
           <ImageRoll
+            tags={tags}
+            addTag={addTag}
             images={images}
-            removeImage={(key) => {
-              props.imageStore.removeItemById(key);
-              getImages((images) => {
-                setImages(images);
-              });
+            removeImage={async (key) => {
+              await imageStore().then((iStore) => iStore.removeItemById(key));
+              setImages(await getImages());
             }}
-            updateTitle={(key, title) => {
+            updateTitle={async (key, title) => {
               const imageDetails = images.filter((i) => i.key === key).pop();
               if (imageDetails) {
-                props.imageStore.updateItemById<IImageData>(imageDetails.key, {
-                  ...imageDetails.data,
-                  title,
-                });
-                getImages((images) => {
-                  setImages(images);
-                });
+                await imageStore().then((iStore) =>
+                  iStore.updateItemById<IImageData>(imageDetails.key, {
+                    ...imageDetails.data,
+                    title,
+                  })
+                );
+                setImages(await getImages());
               }
             }}
           />

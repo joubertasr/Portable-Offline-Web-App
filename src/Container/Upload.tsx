@@ -3,10 +3,11 @@ import { Button, Grid, makeStyles, Paper, Typography } from "@material-ui/core";
 import { v4 as uuidv4 } from "uuid";
 import UploadIcon from "@material-ui/icons/CloudUploadRounded";
 
-import { IndexDBService } from "../Services/IndexedDB.service";
 import { ImageRoll } from "../Components/ImageRoll";
 
 import { IImageData, IImageItem } from "../Types/ImageStore";
+import ImageStore from "../Stores/ImageStore";
+import { IndexDBStore } from "../Services/IndexedDB.service";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -19,25 +20,16 @@ const useStyles = makeStyles((theme) => ({
     display: "none",
   },
 }));
-interface Props {
-  imageStore: IndexDBService;
-}
 
-export const Upload = (props: Props) => {
+export const Upload = () => {
+  let imageStore: IndexDBStore;
   const classes = useStyles();
   const [images, setImages] = useState<Array<IImageItem>>([]);
 
   const uploadRef = React.createRef<HTMLInputElement>();
 
-  const getImages = (cb: (images: Array<IImageItem>) => void) => {
-    props.imageStore
-      .getAllDataFromStore<IImageData>()
-      .then((images: IImageItem[]) => {
-        cb(images);
-      })
-      .catch((e) => {
-        console.log("Problem::: ", e);
-      });
+  const getImages = (): Promise<IImageItem[]> => {
+    return imageStore.getAllDataFromStore<IImageData>();
   };
 
   const onChange = (event: React.FormEvent<HTMLInputElement>) => {
@@ -47,13 +39,12 @@ export const Upload = (props: Props) => {
     reader.onloadend = async (event: Event) => {
       if (reader.result && typeof reader.result === "string") {
         const today = new Date();
-        await props.imageStore.add<IImageData>(uuidv4(), {
+        await imageStore.add<IImageData>(uuidv4(), {
           src: reader.result,
           title: `Uploaded on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
         });
-        getImages((images) => {
-          setImages(images);
-        });
+        const images = await getImages();
+        setImages(images);
       }
     };
 
@@ -66,10 +57,10 @@ export const Upload = (props: Props) => {
 
   useEffect(() => {
     async function initialiseStore() {
-      await props.imageStore.initailise();
-      getImages((images) => {
-        setImages(images);
-      });
+      imageStore = await ImageStore();
+      console.log("======== upload imageStore", imageStore);
+      const images = await getImages();
+      setImages(images);
     }
     initialiseStore();
   }, []);
@@ -97,23 +88,24 @@ export const Upload = (props: Props) => {
       {images.length > 0 && (
         <Grid item={true} xs={12}>
           <ImageRoll
+            tags={[]}
             images={images}
             removeImage={async (key) => {
-              props.imageStore.removeItemById(key);
-              getImages((images) => {
-                setImages(images);
-              });
+              imageStore.removeItemById(key);
+              const images = await getImages();
+              setImages(images);
             }}
             updateTitle={async (key, title) => {
               const imageDetails = images.filter((i) => i.key === key).pop();
               if (imageDetails) {
-                props.imageStore.updateItemById<IImageData>(imageDetails.key, {
+                imageStore.updateItemById<IImageData>(imageDetails.key, {
                   ...imageDetails.data,
                   title,
                 });
 
-                const updatedImage =
-                  await props.imageStore.getItemById<IImageData>(key);
+                const updatedImage = await imageStore.getItemById<IImageData>(
+                  key
+                );
                 setImages(
                   images.map((i) => {
                     return i.key === key ? updatedImage : i;

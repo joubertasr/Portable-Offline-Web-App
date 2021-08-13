@@ -11,9 +11,6 @@ import {
   CardMedia,
   Box,
   Popover,
-  Paper,
-  FormGroup,
-  Input,
   Chip,
 } from "@material-ui/core";
 import { IImageItem } from "../Types/ImageStore";
@@ -22,6 +19,8 @@ import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
 import DownloadIcon from "@material-ui/icons/CloudDownloadRounded";
 import { red } from "@material-ui/core/colors";
+import { ITagItem } from "../Types/TagStore";
+
 const useStyles = makeStyles((theme) => ({
   icon: {
     cursor: "pointer",
@@ -52,11 +51,15 @@ const useStyles = makeStyles((theme) => ({
     height: "100%",
   },
 }));
+
 type Props = {
   images: Array<IImageItem>;
+  tags: Array<ITagItem>;
+  addTag?: (imageKey: string, value: string) => void;
   removeImage: (key: string) => void;
   updateTitle: (key: string, title: string) => void;
 };
+
 export function ImageRoll(props: Props) {
   const styles = useStyles();
   return (
@@ -75,6 +78,7 @@ export function ImageRoll(props: Props) {
             details={image}
             removeImage={props.removeImage}
             updateTitle={props.updateTitle}
+            addTag={props.addTag}
           />
         </Grid>
       ))}
@@ -86,6 +90,7 @@ type ImageProps = {
   details: IImageItem;
   removeImage: (key: string) => void;
   updateTitle: (key: string, title: string) => void;
+  addTag?: (imageKey: string, value: string) => void;
 };
 export function ImageItem(props: ImageProps) {
   const image = props.details;
@@ -140,6 +145,7 @@ export function ImageItem(props: ImageProps) {
               }}
               color="primary"
               size="small"
+              key={tag}
             />
           ))}
         </CardActions>
@@ -167,8 +173,8 @@ export function ImageItem(props: ImageProps) {
         <Button
           size="small"
           className={styles.dangerButton}
-          onClick={() => {
-            props.removeImage(image.key);
+          onClick={async () => {
+            await props.removeImage(image.key);
           }}
         >
           <RemoveIcon color="inherit" />
@@ -209,9 +215,10 @@ export function ImageItem(props: ImageProps) {
           <Box px={2}>
             <Button
               onClick={() => {
-                console.log("Add tag", tagText);
                 setTagText("");
                 setTags([...tags, tagText]);
+                props.addTag && props.addTag(image.key, tagText);
+                console.log("Add tag", tagText, props.addTag);
               }}
             >
               <AddCircleIcon />

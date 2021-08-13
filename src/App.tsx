@@ -21,33 +21,12 @@ import theme from "./styles/theme";
 import Home from "./Container/Home";
 import Camera from "./Container/Camera";
 import Upload from "./Container/Upload";
-import { IndexDBService, ISchema } from "./Services/IndexedDB.service";
 
 type IPage = "Home" | "Camera" | "Upload";
 
 function App() {
   const [menuOpen, setMenuOpen] = useState<boolean>();
   const [page, setPage] = useState<IPage>("Home");
-  const imageSchema: Array<ISchema> = [
-    {
-      version: 1,
-      indexes: [],
-    },
-    {
-      version: 2,
-      indexes: [],
-    },
-    {
-      version: 3,
-      indexes: [
-        {
-          indexName: "tag",
-          keyPath: "tag",
-        },
-      ],
-    },
-  ];
-  const imageStore = new IndexDBService("POWA", "images", imageSchema);
 
   const pageMenuItem = (pageItem: IPage) => (
     <ListItem
@@ -96,8 +75,8 @@ function App() {
           {pages.map((p) => pageMenuItem(p))}
         </Drawer>
         {page === "Home" && <Home />}
-        {page === "Camera" && <Camera imageStore={imageStore} />}
-        {page === "Upload" && <Upload imageStore={imageStore} />}
+        {page === "Camera" && <Camera />}
+        {page === "Upload" && <Upload />}
       </Container>
     </ThemeProvider>
   );
