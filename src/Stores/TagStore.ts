@@ -15,9 +15,9 @@ const tagSchema: ISchema = {
 const iDB = IndexDBService.get("POWA");
 iDB.addStore(tagSchema);
 
-const ImageStore = async () => {
+const TagStore = async () => {
   await iDB.initailise();
   return iDB.getStore("tags");
 };
 
-export default ImageStore;
+export default TagStore;

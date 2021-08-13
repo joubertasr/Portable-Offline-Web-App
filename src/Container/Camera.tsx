@@ -9,7 +9,7 @@ import { ImageRoll } from "../Components/ImageRoll";
 import { IImageItem, IImageData } from "../Types/ImageStore";
 import imageStore from "../Stores/ImageStore";
 import { ITagData, ITagItem } from "../Types/TagStore";
-import { IndexDBStore } from "../Services/IndexedDB.service";
+import TagStore from "../Stores/TagStore";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -70,23 +70,27 @@ export const Camera = () => {
     );
   };
 
-  const getTags = (cb: (images: Array<ITagItem>) => void) => {
-    // tagStore
-    //   .getAllDataFromStore<ITagData>()
-    //   .then((tags: ITagItem[]) => {
-    //     cb(tags);
-    //   })
-    //   .catch((e) => {
-    //     console.log("Problem::: ", e);
-    //   });
+  const getTags = async (cb: (images: Array<ITagItem>) => void) => {
+    await TagStore().then((tagStore) =>
+      tagStore
+        .getAllDataFromStore<ITagData>()
+        .then((tags: ITagItem[]) => {
+          cb(tags);
+        })
+        .catch((e) => {
+          console.log("Problem::: ", e);
+        })
+    );
   };
 
-  const addTag = (imageKey: string, value: string) => {
+  const addTag = async (imageKey: string, value: string) => {
     console.log("Save TAG:", imageKey, value);
-    // tagStore.add(uuidv4(), {
-    //   imageKey,
-    //   value,
-    // });
+    await TagStore().then((tagStore) =>
+      tagStore.add(uuidv4(), {
+        imageKey,
+        value,
+      })
+    );
   };
 
   useEffect(() => {
