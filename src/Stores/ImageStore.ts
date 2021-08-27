@@ -9,6 +9,7 @@ const imageSchema: ISchema = {
 
 const iDB = IndexDBService.get("POWA");
 iDB.addStore(imageSchema);
+iDB.setVersion(imageSchema.version);
 
 const ImageStore = async () => {
   await iDB.initailise();

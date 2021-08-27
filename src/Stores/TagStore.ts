@@ -14,6 +14,7 @@ const tagSchema: ISchema = {
 
 const iDB = IndexDBService.get("POWA");
 iDB.addStore(tagSchema);
+iDB.setVersion(tagSchema.version);
 
 const TagStore = async () => {
   await iDB.initailise();

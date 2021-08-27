@@ -196,11 +196,20 @@ export class IndexDBService {
     this.schemas.push(schema);
   }
 
+  public setVersion(version: number) {
+    if (this.versionNumber < version) {
+      this.versionNumber = version;
+    }
+  }
+
   public async initailise(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         const req = window.indexedDB.open(this.dbName, this.versionNumber);
         if (req) {
+          req.onerror = (e: any) => {
+            console.error("Error", e);
+          };
           req.onsuccess = (e: any) => {
             if (e.target) {
               this.instance = e.target.result;
