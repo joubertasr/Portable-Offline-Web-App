@@ -6,8 +6,7 @@ import UploadIcon from "@material-ui/icons/CloudUploadRounded";
 import { ImageRoll } from "../Components/ImageRoll";
 
 import { IImageData, IImageItem } from "../Types/ImageStore";
-import ImageStore from "../Stores/ImageStore";
-import { IndexDBStore } from "../Services/IndexedDB.service";
+import imageStore from "../Stores/ImageStore";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -22,14 +21,15 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export const Upload = () => {
-  let imageStore: IndexDBStore;
   const classes = useStyles();
   const [images, setImages] = useState<Array<IImageItem>>([]);
 
   const uploadRef = React.createRef<HTMLInputElement>();
 
-  const getImages = (): Promise<IImageItem[]> => {
-    return imageStore.getAllDataFromStore<IImageData>();
+  const getImages = async (): Promise<IImageItem[]> => {
+    return await imageStore().then((iStore) =>
+      iStore.getAllDataFromStore<IImageData>()
+    );
   };
 
   const onChange = (event: React.FormEvent<HTMLInputElement>) => {
@@ -39,10 +39,14 @@ export const Upload = () => {
     reader.onloadend = async (event: Event) => {
       if (reader.result && typeof reader.result === "string") {
         const today = new Date();
-        await imageStore.add<IImageData>(uuidv4(), {
-          src: reader.result,
-          title: `Uploaded on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
-        });
+        if (reader.result) {
+          await imageStore().then((iStore) =>
+            iStore.add<IImageData>(uuidv4(), {
+              src: reader.result ? reader.result.toString() : "",
+              title: `Uploaded on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
+            })
+          );
+        }
         const images = await getImages();
         setImages(images);
       }
@@ -57,10 +61,7 @@ export const Upload = () => {
 
   useEffect(() => {
     async function initialiseStore() {
-      imageStore = await ImageStore();
-      console.log("======== upload imageStore", imageStore);
-      const images = await getImages();
-      setImages(images);
+      setImages(await getImages());
     }
     initialiseStore();
   }, []);
@@ -91,26 +92,19 @@ export const Upload = () => {
             tags={[]}
             images={images}
             removeImage={async (key) => {
-              imageStore.removeItemById(key);
-              const images = await getImages();
-              setImages(images);
+              await imageStore().then((iStore) => iStore.removeItemById(key));
+              setImages(await getImages());
             }}
             updateTitle={async (key, title) => {
               const imageDetails = images.filter((i) => i.key === key).pop();
               if (imageDetails) {
-                imageStore.updateItemById<IImageData>(imageDetails.key, {
-                  ...imageDetails.data,
-                  title,
-                });
-
-                const updatedImage = await imageStore.getItemById<IImageData>(
-                  key
-                );
-                setImages(
-                  images.map((i) => {
-                    return i.key === key ? updatedImage : i;
+                await imageStore().then((iStore) =>
+                  iStore.updateItemById<IImageData>(imageDetails.key, {
+                    ...imageDetails.data,
+                    title,
                   })
                 );
+                setImages(await getImages());
               }
             }}
           />
