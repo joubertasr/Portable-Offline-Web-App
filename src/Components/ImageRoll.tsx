@@ -55,7 +55,8 @@ const useStyles = makeStyles((theme) => ({
 type Props = {
   images: Array<IImageItem>;
   tags: Array<ITagItem>;
-  addTag?: (imageKey: string, value: string) => void;
+  addTag: (imageKey: string, value: string) => void;
+  removeTag: (key: string) => void;
   removeImage: (key: string) => void;
   updateTitle: (key: string, title: string) => void;
 };
@@ -76,9 +77,11 @@ export function ImageRoll(props: Props) {
         >
           <ImageItem
             details={image}
+            addTag={props.addTag}
+            tags={props.tags.filter((t) => t.data.imageKey === image.key)}
+            removeTag={props.removeTag}
             removeImage={props.removeImage}
             updateTitle={props.updateTitle}
-            addTag={props.addTag}
           />
         </Grid>
       ))}
@@ -86,11 +89,12 @@ export function ImageRoll(props: Props) {
   );
 }
 
-type ImageProps = {
+type ImageProps = Pick<
+  Props,
+  "addTag" | "removeTag" | "removeImage" | "updateTitle"
+> & {
   details: IImageItem;
-  removeImage: (key: string) => void;
-  updateTitle: (key: string, title: string) => void;
-  addTag?: (imageKey: string, value: string) => void;
+  tags: ITagItem[];
 };
 export function ImageItem(props: ImageProps) {
   const image = props.details;
@@ -98,10 +102,9 @@ export function ImageItem(props: ImageProps) {
   const [title, setTitle] = useState<string>(image.data.title);
   const [open, setOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = useState<any>();
+  const tags = props.tags;
   const [tagText, setTagText] = useState<string>("");
   const styles = useStyles();
-
-  const [tags, setTags] = useState<string[]>(["Hello", "world"]);
   return (
     <Card className={styles.fullHeightCard}>
       <CardMedia component="img" src={image.data.src} title={title} />
@@ -138,14 +141,14 @@ export function ImageItem(props: ImageProps) {
         <CardActions>
           {tags.map((tag) => (
             <Chip
-              label={tag}
+              label={tag.data.value}
               onDelete={() => {
                 console.log("Remove tag", tag);
-                setTags(tags.filter((t) => t !== tag));
+                props.removeTag(tag.key);
               }}
               color="primary"
               size="small"
-              key={tag}
+              key={tag.key}
             />
           ))}
         </CardActions>
@@ -216,7 +219,6 @@ export function ImageItem(props: ImageProps) {
             <Button
               onClick={() => {
                 setTagText("");
-                setTags([...tags, tagText]);
                 props.addTag && props.addTag(image.key, tagText);
                 console.log("Add tag", tagText, props.addTag);
               }}

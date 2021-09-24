@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Button, Grid, makeStyles, Paper, Typography } from "@material-ui/core";
-import { v4 as uuidv4 } from "uuid";
 import UploadIcon from "@material-ui/icons/CloudUploadRounded";
 
 import { ImageRoll } from "../Components/ImageRoll";
 
-import { IImageData, IImageItem } from "../Types/ImageStore";
-import imageStore from "../Stores/ImageStore";
+import { IImageItem } from "../Types/ImageStore";
+import {
+  addImage,
+  getImages,
+  removeImage,
+  updateTitle,
+} from "../Utils/ImageHelper";
+import { addTag, getTags, removeTag } from "../Utils/TagHelper";
+import { ITagItem } from "../Types/TagStore";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -23,14 +29,9 @@ const useStyles = makeStyles((theme) => ({
 export const Upload = () => {
   const classes = useStyles();
   const [images, setImages] = useState<Array<IImageItem>>([]);
+  const [tags, setTags] = useState<Array<ITagItem>>([]);
 
   const uploadRef = React.createRef<HTMLInputElement>();
-
-  const getImages = async (): Promise<IImageItem[]> => {
-    return await imageStore().then((iStore) =>
-      iStore.getAllDataFromStore<IImageData>()
-    );
-  };
 
   const onChange = (event: React.FormEvent<HTMLInputElement>) => {
     const target = event.target as HTMLInputElement;
@@ -38,17 +39,10 @@ export const Upload = () => {
     var reader = new FileReader();
     reader.onloadend = async (event: Event) => {
       if (reader.result && typeof reader.result === "string") {
-        const today = new Date();
         if (reader.result) {
-          await imageStore().then((iStore) =>
-            iStore.add<IImageData>(uuidv4(), {
-              src: reader.result ? reader.result.toString() : "",
-              title: `Uploaded on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
-            })
-          );
+          addImage(reader.result.toString());
         }
-        const images = await getImages();
-        setImages(images);
+        setImages(await getImages());
       }
     };
 
@@ -62,6 +56,7 @@ export const Upload = () => {
   useEffect(() => {
     async function initialiseStore() {
       setImages(await getImages());
+      setTags(await getTags());
     }
     initialiseStore();
   }, []);
@@ -89,23 +84,23 @@ export const Upload = () => {
       {images.length > 0 && (
         <Grid item={true} xs={12}>
           <ImageRoll
-            tags={[]}
+            tags={tags}
             images={images}
             removeImage={async (key) => {
-              await imageStore().then((iStore) => iStore.removeItemById(key));
+              removeImage(key);
               setImages(await getImages());
             }}
+            removeTag={async (key) => {
+              await removeTag(key);
+              setTags(await getTags());
+            }}
+            addTag={async (key, value) => {
+              await addTag(key, value);
+              setTags(await getTags());
+            }}
             updateTitle={async (key, title) => {
-              const imageDetails = images.filter((i) => i.key === key).pop();
-              if (imageDetails) {
-                await imageStore().then((iStore) =>
-                  iStore.updateItemById<IImageData>(imageDetails.key, {
-                    ...imageDetails.data,
-                    title,
-                  })
-                );
-                setImages(await getImages());
-              }
+              updateTitle(key, title);
+              setImages(await getImages());
             }}
           />
         </Grid>

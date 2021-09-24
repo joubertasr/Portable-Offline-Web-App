@@ -8,8 +8,14 @@ import { ImageRoll } from "../Components/ImageRoll";
 
 import { IImageItem, IImageData } from "../Types/ImageStore";
 import imageStore from "../Stores/ImageStore";
-import { ITagData, ITagItem } from "../Types/TagStore";
-import TagStore from "../Stores/TagStore";
+import { ITagItem } from "../Types/TagStore";
+import { addTag, getTags, removeTag } from "../Utils/TagHelper";
+import {
+  getImages,
+  addImage,
+  removeImage,
+  updateTitle,
+} from "../Utils/ImageHelper";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -49,13 +55,7 @@ export const Camera = () => {
       const imageSrc = webcamRef.current.getScreenshot();
       if (imageSrc) {
         try {
-          const today = new Date();
-          await imageStore().then((iStore) =>
-            iStore.add<IImageData>(uuidv4(), {
-              src: imageSrc,
-              title: `Taken on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
-            })
-          );
+          await addImage(imageSrc);
           setImages(await getImages());
         } catch (e) {
           console.log("----Error: ", e);
@@ -64,38 +64,10 @@ export const Camera = () => {
     }
   }, [webcamRef]);
 
-  const getImages = async (): Promise<IImageItem[]> => {
-    return await imageStore().then((iStore) =>
-      iStore.getAllDataFromStore<IImageData>()
-    );
-  };
-
-  const getTags = async (cb: (images: Array<ITagItem>) => void) => {
-    await TagStore().then((tagStore) =>
-      tagStore
-        .getAllDataFromStore<ITagData>()
-        .then((tags: ITagItem[]) => {
-          cb(tags);
-        })
-        .catch((e) => {
-          console.log("Problem::: ", e);
-        })
-    );
-  };
-
-  const addTag = async (imageKey: string, value: string) => {
-    console.log("Save TAG:", imageKey, value);
-    await TagStore().then((tagStore) =>
-      tagStore.add(uuidv4(), {
-        imageKey,
-        value,
-      })
-    );
-  };
-
   useEffect(() => {
     async function initialiseStore() {
       setImages(await getImages());
+      setTags(await getTags());
     }
     initialiseStore();
   }, []);
@@ -123,23 +95,22 @@ export const Camera = () => {
         <Grid item={true} xs={12}>
           <ImageRoll
             tags={tags}
-            addTag={addTag}
+            addTag={async (imageKey, value) => {
+              await addTag(imageKey, value);
+              setTags(await getTags());
+            }}
+            removeTag={async (imageKey) => {
+              await removeTag(imageKey);
+              setTags(await getTags());
+            }}
             images={images}
             removeImage={async (key) => {
-              await imageStore().then((iStore) => iStore.removeItemById(key));
+              removeImage(key);
               setImages(await getImages());
             }}
             updateTitle={async (key, title) => {
-              const imageDetails = images.filter((i) => i.key === key).pop();
-              if (imageDetails) {
-                await imageStore().then((iStore) =>
-                  iStore.updateItemById<IImageData>(imageDetails.key, {
-                    ...imageDetails.data,
-                    title,
-                  })
-                );
-                setImages(await getImages());
-              }
+              updateTitle(key, title);
+              setImages(await getImages());
             }}
           />
         </Grid>
