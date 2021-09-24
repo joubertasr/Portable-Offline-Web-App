@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Button, Grid, makeStyles, Paper, Typography } from "@material-ui/core";
 import Webcam from "react-webcam";
-import { v4 as uuidv4 } from "uuid";
+
 import CameraIcon from "@material-ui/icons/Camera";
 
 import { ImageRoll } from "../Components/ImageRoll";
 
-import { IImageItem, IImageData } from "../Types/ImageStore";
-import imageStore from "../Stores/ImageStore";
+import { IImageItem } from "../Types/ImageStore";
 import { ITagItem } from "../Types/TagStore";
 import { addTag, getTags, removeTag } from "../Utils/TagHelper";
 import {
