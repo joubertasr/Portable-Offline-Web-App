@@ -75,7 +75,9 @@ export function ImageRoll(props: Props) {
       )}
       <Grid container={true} spacing={1}>
         {props.images
-          .filter((i) => taggedPhotos.indexOf(i.key) > -1)
+          .filter(
+            (i) => props.tagFilter === "" || taggedPhotos.indexOf(i.key) > -1
+          )
           .map((image, i) => (
             <Grid
               key={image.key}
