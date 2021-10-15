@@ -1,6 +1,7 @@
 import { IndexDBService, ISchema } from "../Services/IndexedDB.service";
 
-const tagSchema: ISchema = {
+export type IndexKey = "imageKey" | "valueKey";
+const tagSchema: ISchema<IndexKey> = {
   version: 2,
   storeName: "tags",
   indexes: [
@@ -8,11 +9,15 @@ const tagSchema: ISchema = {
       indexName: "imageKey",
       keyPath: "imageKey",
     },
+    {
+      indexName: "valueKey",
+      keyPath: "value",
+    },
   ],
 };
 // add the store and its schema to the db
 
-const iDB = IndexDBService.get("POWA");
+const iDB = IndexDBService.get<IndexKey>("POWA");
 iDB.addStore(tagSchema);
 iDB.setVersion(tagSchema.version);
 

@@ -8,13 +8,14 @@ import { ImageRoll } from "../Components/ImageRoll";
 
 import { IImageItem } from "../Types/ImageStore";
 import { ITagItem } from "../Types/TagStore";
-import { addTag, getTags, removeTag } from "../Utils/TagHelper";
+import { addTag, getTags, getTagsByIndex, removeTag } from "../Utils/TagHelper";
 import {
   getImages,
   addImage,
   removeImage,
   updateTitle,
 } from "../Utils/ImageHelper";
+import { IndexKey } from "../Stores/TagStore";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -48,6 +49,7 @@ export const Camera = () => {
   const webcamRef = React.useRef<Webcam>(null);
   const [images, setImages] = useState<Array<IImageItem>>([]);
   const [tags, setTags] = useState<Array<ITagItem>>([]);
+  const [tagFilter, setTagFilter] = useState<string>("");
 
   const capture = React.useCallback(async () => {
     if (webcamRef && webcamRef.current) {
@@ -94,9 +96,18 @@ export const Camera = () => {
         <Grid item={true} xs={12}>
           <ImageRoll
             tags={tags}
+            tagFilter={tagFilter}
+            setTagFilter={(filter: string) => setTagFilter(filter)}
             addTag={async (imageKey, value) => {
               await addTag(imageKey, value);
-              setTags(await getTags());
+              const updatedTags = await getTagsByIndex<IndexKey, ITagItem>(
+                "imageKey",
+                imageKey
+              );
+              const otherTags = tags.filter(
+                (t) => t.data.imageKey !== imageKey
+              );
+              setTags([...otherTags, ...updatedTags]);
             }}
             removeTag={async (imageKey) => {
               await removeTag(imageKey);

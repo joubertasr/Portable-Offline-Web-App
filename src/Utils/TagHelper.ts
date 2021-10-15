@@ -20,3 +20,9 @@ export const addTag = async (imageKey: string, value: string) => {
 export const removeTag = async (imageKey: string) => {
   await TagStore().then((tagStore) => tagStore.removeItemById(imageKey));
 };
+
+export async function getTagsByIndex<T, R>(indexName: T, key: string) {
+  return await TagStore().then((tagStore) => {
+    return tagStore.getDataUsingIndexByKey<T, R>(indexName, key);
+  });
+}

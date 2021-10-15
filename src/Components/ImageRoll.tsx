@@ -55,43 +55,62 @@ const useStyles = makeStyles((theme) => ({
 type Props = {
   images: Array<IImageItem>;
   tags: Array<ITagItem>;
+  tagFilter: string;
   addTag: (imageKey: string, value: string) => void;
   removeTag: (key: string) => void;
   removeImage: (key: string) => void;
   updateTitle: (key: string, title: string) => void;
+  setTagFilter: (filter: string) => void;
 };
 
 export function ImageRoll(props: Props) {
   const styles = useStyles();
+  const taggedPhotos = props.tags
+    .filter((t) => props.tagFilter === "" || t.data.value === props.tagFilter)
+    .map((t) => t.data.imageKey);
   return (
-    <Grid container={true} spacing={1}>
-      {props.images.map((image, i) => (
-        <Grid
-          key={image.key}
-          item={true}
-          xs={12}
-          sm={6}
-          lg={4}
-          xl={3}
-          className={styles.itemContainer}
-        >
-          <ImageItem
-            details={image}
-            addTag={props.addTag}
-            tags={props.tags.filter((t) => t.data.imageKey === image.key)}
-            removeTag={props.removeTag}
-            removeImage={props.removeImage}
-            updateTitle={props.updateTitle}
-          />
-        </Grid>
-      ))}
-    </Grid>
+    <>
+      {props.tagFilter !== "" && (
+        <Button onClick={() => props.setTagFilter("")}>Clear filter</Button>
+      )}
+      <Grid container={true} spacing={1}>
+        {props.images
+          .filter((i) => taggedPhotos.indexOf(i.key) > -1)
+          .map((image, i) => (
+            <Grid
+              key={image.key}
+              item={true}
+              xs={12}
+              sm={6}
+              lg={4}
+              xl={3}
+              className={styles.itemContainer}
+            >
+              <ImageItem
+                details={image}
+                tagFilter={props.tagFilter}
+                addTag={props.addTag}
+                tags={props.tags.filter((t) => t.data.imageKey === image.key)}
+                removeTag={props.removeTag}
+                removeImage={props.removeImage}
+                updateTitle={props.updateTitle}
+                setTagFilter={props.setTagFilter}
+              />
+            </Grid>
+          ))}
+      </Grid>
+    </>
   );
 }
 
 type ImageProps = Pick<
   Props,
-  "addTag" | "removeTag" | "removeImage" | "updateTitle"
+  | "addTag"
+  | "removeTag"
+  | "removeImage"
+  | "updateTitle"
+  | "setTagFilter"
+  | "tagFilter"
 > & {
   details: IImageItem;
   tags: ITagItem[];
@@ -143,10 +162,14 @@ export function ImageItem(props: ImageProps) {
             <Chip
               label={tag.data.value}
               onDelete={() => {
-                console.log("Remove tag", tag);
                 props.removeTag(tag.key);
               }}
-              color="primary"
+              onClick={() => {
+                props.setTagFilter(
+                  props.tagFilter !== "" ? "" : tag.data.value
+                );
+              }}
+              color={props.tagFilter !== tag.data.value ? "default" : "primary"}
               size="small"
               key={tag.key}
             />

@@ -30,6 +30,7 @@ export const Upload = () => {
   const classes = useStyles();
   const [images, setImages] = useState<Array<IImageItem>>([]);
   const [tags, setTags] = useState<Array<ITagItem>>([]);
+  const [tagFilter, setTagFilter] = useState<string>("");
 
   const uploadRef = React.createRef<HTMLInputElement>();
 
@@ -86,6 +87,8 @@ export const Upload = () => {
           <ImageRoll
             tags={tags}
             images={images}
+            tagFilter={tagFilter}
+            setTagFilter={(filter: string) => setTagFilter(filter)}
             removeImage={async (key) => {
               removeImage(key);
               setImages(await getImages());

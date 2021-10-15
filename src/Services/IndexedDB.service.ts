@@ -1,8 +1,8 @@
-export interface ISchema {
+export interface ISchema<T> {
   version: number;
   storeName: string;
   indexes: Array<{
-    indexName: string;
+    indexName: T;
     keyPath: string;
     options?: IDBIndexParameters;
   }>;
@@ -44,25 +44,31 @@ export class IndexDBStore {
     });
   }
 
-  public getDataUsingIndexByKey<T>(
-    indexName: string,
+  public getDataUsingIndexByKey<T, R>(
+    indexName: T,
     key: string
-  ): Promise<Array<{ key: string; data: T }>> {
+  ): Promise<Array<R>> {
     return new Promise((res, rej) => {
       if (!this.store) {
         return rej("No store");
       }
       try {
-        const indexInstance = this.store.index(indexName);
+        const indexInstance = this.store.index(indexName as unknown as string);
 
-        let data: Array<{ key: string; data: T }> = [];
-        const indexCursor = indexInstance.get(key);
+        const keyRange = IDBKeyRange.only(key);
 
+        let data: Array<R> = [];
+        const indexCursor = indexInstance.openCursor(keyRange);
         indexCursor.onsuccess = (event: any) => {
           let cursor = event.target.result;
           if (cursor) {
-            data.push({ key: cursor.primaryKey, data: cursor.value });
-            cursor.continue();
+            data.push({
+              key: cursor.primaryKey,
+              data: cursor.value,
+            } as unknown as R);
+            if (cursor.continue) {
+              cursor.continue();
+            }
           } else {
             res(data);
           }
@@ -165,14 +171,12 @@ export class IndexDBStore {
     });
   }
 }
-export class IndexDBService {
-  private static self: IndexDBService | undefined;
+export class IndexDBService<T> {
+  private static self: IndexDBService<any> | undefined;
   private instance: IDBDatabase | undefined;
   private dbName: string;
-  private storeNames: string[] = [];
   private versionNumber: number = 1;
-  private schemas: Array<ISchema> = [];
-  private indexes: Array<{ name: string; index: IDBIndex }> = [];
+  private schemas: Array<ISchema<T>> = [];
 
   constructor(databaseName: string) {
     if (!window.indexedDB) {
@@ -184,15 +188,15 @@ export class IndexDBService {
     this.dbName = databaseName;
   }
 
-  static get(databaseName: string) {
+  static get<T>(databaseName: string) {
     if (!IndexDBService.self) {
-      IndexDBService.self = new IndexDBService(databaseName);
+      IndexDBService.self = new IndexDBService<T>(databaseName);
     }
 
     return IndexDBService.self;
   }
 
-  public addStore(schema: ISchema) {
+  public addStore(schema: ISchema<T>) {
     this.schemas.push(schema);
   }
 
