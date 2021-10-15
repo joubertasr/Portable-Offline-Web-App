@@ -11,8 +11,9 @@ import {
   removeImage,
   updateTitle,
 } from "../Utils/ImageHelper";
-import { addTag, getTags, removeTag } from "../Utils/TagHelper";
+import { addTag, getTags, getTagsByIndex, removeTag } from "../Utils/TagHelper";
 import { ITagItem } from "../Types/TagStore";
+import { IndexKey } from "../Stores/TagStore";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -97,9 +98,16 @@ export const Upload = () => {
               await removeTag(key);
               setTags(await getTags());
             }}
-            addTag={async (key, value) => {
-              await addTag(key, value);
-              setTags(await getTags());
+            addTag={async (imageKey, value) => {
+              await addTag(imageKey, value);
+              const updatedTags = await getTagsByIndex<IndexKey, ITagItem>(
+                "imageKey",
+                imageKey
+              );
+              const otherTags = tags.filter(
+                (t) => t.data.imageKey !== imageKey
+              );
+              setTags([...otherTags, ...updatedTags]);
             }}
             updateTitle={async (key, title) => {
               updateTitle(key, title);

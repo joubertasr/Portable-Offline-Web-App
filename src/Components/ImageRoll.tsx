@@ -243,7 +243,6 @@ export function ImageItem(props: ImageProps) {
               onClick={() => {
                 setTagText("");
                 props.addTag && props.addTag(image.key, tagText);
-                console.log("Add tag", tagText, props.addTag);
               }}
             >
               <AddCircleIcon />
