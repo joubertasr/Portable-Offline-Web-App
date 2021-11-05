@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { Button, Grid, makeStyles, Paper, Typography } from "@material-ui/core";
 import Webcam from "react-webcam";
-import { v4 as uuidv4 } from "uuid";
+
 import CameraIcon from "@material-ui/icons/Camera";
 
-import { IndexDBService } from "../Services/IndexedDB.service";
 import { ImageRoll } from "../Components/ImageRoll";
 
-import { IImageItem, IImageData } from "../Types/ImageStore";
+import { IImageItem } from "../Types/ImageStore";
+import { ITagItem } from "../Types/TagStore";
+import { addTag, getTags, getTagsByIndex, removeTag } from "../Utils/TagHelper";
+import {
+  getImages,
+  addImage,
+  removeImage,
+  updateTitle,
+} from "../Utils/ImageHelper";
+import { IndexKey } from "../Stores/TagStore";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -30,11 +38,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {
-  imageStore: IndexDBService;
-}
-
-export const Camera = (props: Props) => {
+export const Camera = () => {
   const videoConstraints = {
     width: 1280,
     height: 720,
@@ -44,20 +48,16 @@ export const Camera = (props: Props) => {
   const classes = useStyles();
   const webcamRef = React.useRef<Webcam>(null);
   const [images, setImages] = useState<Array<IImageItem>>([]);
+  const [tags, setTags] = useState<Array<ITagItem>>([]);
+  const [tagFilter, setTagFilter] = useState<string>("");
 
   const capture = React.useCallback(async () => {
     if (webcamRef && webcamRef.current) {
       const imageSrc = webcamRef.current.getScreenshot();
       if (imageSrc) {
         try {
-          const today = new Date();
-          await props.imageStore.add<IImageData>(uuidv4(), {
-            src: imageSrc,
-            title: `Taken on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
-          });
-          getImages((images) => {
-            setImages(images);
-          });
+          await addImage(imageSrc);
+          setImages(await getImages());
         } catch (e) {
           console.log("----Error: ", e);
         }
@@ -65,27 +65,16 @@ export const Camera = (props: Props) => {
     }
   }, [webcamRef]);
 
-  const getImages = (cb: (images: Array<IImageItem>) => void) => {
-    props.imageStore
-      .getDataAllFromStore<IImageItem>()
-      .then((images) => {
-        cb(images);
-      })
-      .catch((e) => {
-        console.log("Problem::: ", e);
-      });
-  };
-
   useEffect(() => {
-    props.imageStore.initailise().then(() => {
-      getImages((images) => {
-        setImages(images);
-      });
-    });
+    async function initialiseStore() {
+      setImages(await getImages());
+      setTags(await getTags());
+    }
+    initialiseStore();
   }, []);
 
   return (
-    <Grid container={true}>
+    <Grid container={true} spacing={2}>
       <Grid item={true} xs={12}>
         <Paper className={classes.paper}>
           <Typography variant="h1">Camera</Typography>
@@ -104,27 +93,37 @@ export const Camera = (props: Props) => {
         </Paper>
       </Grid>
       {images.length > 0 && (
-        <ImageRoll
-          images={images}
-          removeImage={(key) => {
-            props.imageStore.removeItemById(key);
-            getImages((images) => {
-              setImages(images);
-            });
-          }}
-          updateTitle={(key, title) => {
-            const imageDetails = images.filter((i) => i.key === key).pop();
-            if (imageDetails) {
-              props.imageStore.updateItemById<IImageData>(imageDetails.key, {
-                ...imageDetails.data,
-                title,
-              });
-              getImages((images) => {
-                setImages(images);
-              });
-            }
-          }}
-        />
+        <Grid item={true} xs={12}>
+          <ImageRoll
+            tags={tags}
+            tagFilter={tagFilter}
+            setTagFilter={(filter: string) => setTagFilter(filter)}
+            addTag={async (imageKey, value) => {
+              await addTag(imageKey, value);
+              const updatedTags = await getTagsByIndex<IndexKey, ITagItem>(
+                "imageKey",
+                imageKey
+              );
+              const otherTags = tags.filter(
+                (t) => t.data.imageKey !== imageKey
+              );
+              setTags([...otherTags, ...updatedTags]);
+            }}
+            removeTag={async (imageKey) => {
+              await removeTag(imageKey);
+              setTags(await getTags());
+            }}
+            images={images}
+            removeImage={async (key) => {
+              removeImage(key);
+              setImages(await getImages());
+            }}
+            updateTitle={async (key, title) => {
+              updateTitle(key, title);
+              setImages(await getImages());
+            }}
+          />
+        </Grid>
       )}
     </Grid>
   );
