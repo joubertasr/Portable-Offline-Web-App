@@ -1,6 +1,6 @@
-import ImageStore from "../Stores/ImageStore";
 import { IImageData, IImageItem } from "../Types/ImageStore";
 import { v4 as uuidv4 } from "uuid";
+import { ImageStore } from "../Stores/Collections";
 
 export const getImages = async (): Promise<IImageItem[]> => {
   return await ImageStore().then((iStore) =>

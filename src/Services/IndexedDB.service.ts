@@ -1,11 +1,14 @@
-export interface ISchema<T> {
-  version: number;
+export interface IStoreSchema<T> {
   storeName: string;
   indexes: Array<{
     indexName: T;
     keyPath: string;
     options?: IDBIndexParameters;
   }>;
+}
+export interface ISchema<T> {
+  version: number;
+  stores: Array<IStoreSchema<T>>;
 }
 
 export class IndexDBStore {
@@ -176,7 +179,7 @@ export class IndexDBService<T> {
   private instance: IDBDatabase | undefined;
   private dbName: string;
   private versionNumber: number = 1;
-  private schemas: Array<ISchema<T>> = [];
+  private schemas: Array<IStoreSchema<T>> = [];
 
   constructor(databaseName: string) {
     if (!window.indexedDB) {
@@ -196,8 +199,10 @@ export class IndexDBService<T> {
     return IndexDBService.self;
   }
 
-  public addStore(schema: ISchema<T>) {
-    this.schemas.push(schema);
+  public addSchema(schema: ISchema<T>) {
+    schema.stores.forEach((store) => {
+      this.schemas.push(store);
+    });
   }
 
   public setVersion(version: number) {
@@ -224,6 +229,7 @@ export class IndexDBService<T> {
           };
           req.onupgradeneeded = (e: any) => {
             const db = e.target.result;
+            console.log("Schema:::", this.schemas);
             for (const schema of this.schemas) {
               if (!db.objectStoreNames.contains(schema.storeName)) {
                 const objectStore = db.createObjectStore(schema.storeName);
@@ -235,9 +241,6 @@ export class IndexDBService<T> {
                       index.options
                     );
                   }
-                }
-                if (this.versionNumber < schema.version) {
-                  this.versionNumber = schema.version;
                 }
               }
             }

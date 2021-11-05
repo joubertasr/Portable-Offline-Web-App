@@ -1,6 +1,6 @@
-import TagStore from "../Stores/TagStore";
 import { ITagData, ITagItem } from "../Types/TagStore";
 import { v4 as uuidv4 } from "uuid";
+import { TagStore } from "../Stores/Collections";
 
 export const getTags = async (): Promise<ITagItem[]> => {
   return await TagStore().then((tagStore) =>

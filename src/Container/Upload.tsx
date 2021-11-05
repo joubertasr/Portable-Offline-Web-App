@@ -13,7 +13,7 @@ import {
 } from "../Utils/ImageHelper";
 import { addTag, getTags, getTagsByIndex, removeTag } from "../Utils/TagHelper";
 import { ITagItem } from "../Types/TagStore";
-import { IndexKey } from "../Stores/TagStore";
+import { TagIndexKey } from "../Stores/Collections";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -100,7 +100,7 @@ export const Upload = () => {
             }}
             addTag={async (imageKey, value) => {
               await addTag(imageKey, value);
-              const updatedTags = await getTagsByIndex<IndexKey, ITagItem>(
+              const updatedTags = await getTagsByIndex<TagIndexKey, ITagItem>(
                 "imageKey",
                 imageKey
               );

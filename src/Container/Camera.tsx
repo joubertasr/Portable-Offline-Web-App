@@ -15,7 +15,7 @@ import {
   removeImage,
   updateTitle,
 } from "../Utils/ImageHelper";
-import { IndexKey } from "../Stores/TagStore";
+import { TagIndexKey } from "../Stores/Collections";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -100,7 +100,7 @@ export const Camera = () => {
             setTagFilter={(filter: string) => setTagFilter(filter)}
             addTag={async (imageKey, value) => {
               await addTag(imageKey, value);
-              const updatedTags = await getTagsByIndex<IndexKey, ITagItem>(
+              const updatedTags = await getTagsByIndex<TagIndexKey, ITagItem>(
                 "imageKey",
                 imageKey
               );
