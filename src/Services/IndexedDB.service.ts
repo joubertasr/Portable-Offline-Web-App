@@ -222,8 +222,10 @@ export class IndexDBService<T> {
           req.onsuccess = (e: any) => {
             if (e.target) {
               this.instance = e.target.result;
+              console.log("Here1", typeof this.instance);
               resolve();
             } else {
+              console.log("Here2");
               reject("No instance found");
             }
           };

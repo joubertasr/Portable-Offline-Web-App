@@ -8,14 +8,9 @@ import { ImageRoll } from "../Components/ImageRoll";
 
 import { IImageItem } from "../Types/ImageStore";
 import { ITagItem } from "../Types/TagStore";
-import { addTag, getTags, getTagsByIndex, removeTag } from "../Utils/TagHelper";
-import {
-  getImages,
-  addImage,
-  removeImage,
-  updateTitle,
-} from "../Utils/ImageHelper";
-import { TagIndexKey } from "../Stores/Collections";
+import TagHelper from "../Utils/TagHelper";
+import ImageHelper from "../Utils/ImageHelper";
+import { TagIndexKey } from "../Stores/Database";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -56,8 +51,8 @@ export const Camera = () => {
       const imageSrc = webcamRef.current.getScreenshot();
       if (imageSrc) {
         try {
-          await addImage(imageSrc);
-          setImages(await getImages());
+          await ImageHelper.addImage(imageSrc);
+          setImages(await ImageHelper.get());
         } catch (e) {
           console.log("----Error: ", e);
         }
@@ -67,8 +62,8 @@ export const Camera = () => {
 
   useEffect(() => {
     async function initialiseStore() {
-      setImages(await getImages());
-      setTags(await getTags());
+      setImages(await ImageHelper.get());
+      setTags(await TagHelper.get());
     }
     initialiseStore();
   }, []);
@@ -99,28 +94,28 @@ export const Camera = () => {
             tagFilter={tagFilter}
             setTagFilter={(filter: string) => setTagFilter(filter)}
             addTag={async (imageKey, value) => {
-              await addTag(imageKey, value);
-              const updatedTags = await getTagsByIndex<TagIndexKey, ITagItem>(
-                "imageKey",
-                imageKey
-              );
+              await TagHelper.addTag(imageKey, value);
+              const updatedTags = await TagHelper.getByIndex<
+                TagIndexKey,
+                ITagItem
+              >("imageKey", imageKey);
               const otherTags = tags.filter(
                 (t) => t.data.imageKey !== imageKey
               );
               setTags([...otherTags, ...updatedTags]);
             }}
             removeTag={async (imageKey) => {
-              await removeTag(imageKey);
-              setTags(await getTags());
+              await TagHelper.remove(imageKey);
+              setTags(await TagHelper.get());
             }}
             images={images}
             removeImage={async (key) => {
-              removeImage(key);
-              setImages(await getImages());
+              ImageHelper.remove(key);
+              setImages(await ImageHelper.get());
             }}
             updateTitle={async (key, title) => {
-              updateTitle(key, title);
-              setImages(await getImages());
+              ImageHelper.updateTitle(key, title);
+              setImages(await ImageHelper.get());
             }}
           />
         </Grid>

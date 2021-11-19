@@ -37,11 +37,4 @@ iDB.addSchema(schema);
 
 iDB.setVersion(schema.version);
 
-export const TagStore = async () => {
-  await iDB.initailise();
-  return iDB.getStore("tags");
-};
-export const ImageStore = async () => {
-  await iDB.initailise();
-  return iDB.getStore("images");
-};
+export default iDB;

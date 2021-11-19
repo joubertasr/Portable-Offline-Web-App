@@ -5,15 +5,10 @@ import UploadIcon from "@material-ui/icons/CloudUploadRounded";
 import { ImageRoll } from "../Components/ImageRoll";
 
 import { IImageItem } from "../Types/ImageStore";
-import {
-  addImage,
-  getImages,
-  removeImage,
-  updateTitle,
-} from "../Utils/ImageHelper";
-import { addTag, getTags, getTagsByIndex, removeTag } from "../Utils/TagHelper";
+import ImageHelper from "../Utils/ImageHelper";
+import TagHelper from "../Utils/TagHelper";
 import { ITagItem } from "../Types/TagStore";
-import { TagIndexKey } from "../Stores/Collections";
+import { TagIndexKey } from "../Stores/Database";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -42,9 +37,9 @@ export const Upload = () => {
     reader.onloadend = async (event: Event) => {
       if (reader.result && typeof reader.result === "string") {
         if (reader.result) {
-          addImage(reader.result.toString());
+          ImageHelper.addImage(reader.result.toString());
         }
-        setImages(await getImages());
+        setImages(await ImageHelper.get());
       }
     };
 
@@ -57,8 +52,8 @@ export const Upload = () => {
 
   useEffect(() => {
     async function initialiseStore() {
-      setImages(await getImages());
-      setTags(await getTags());
+      setImages(await ImageHelper.get());
+      setTags(await TagHelper.get());
     }
     initialiseStore();
   }, []);
@@ -91,27 +86,27 @@ export const Upload = () => {
             tagFilter={tagFilter}
             setTagFilter={(filter: string) => setTagFilter(filter)}
             removeImage={async (key) => {
-              removeImage(key);
-              setImages(await getImages());
+              ImageHelper.remove(key);
+              setImages(await ImageHelper.get());
             }}
             removeTag={async (key) => {
-              await removeTag(key);
-              setTags(await getTags());
+              await TagHelper.remove(key);
+              setTags(await TagHelper.get());
             }}
             addTag={async (imageKey, value) => {
-              await addTag(imageKey, value);
-              const updatedTags = await getTagsByIndex<TagIndexKey, ITagItem>(
-                "imageKey",
-                imageKey
-              );
+              await TagHelper.addTag(imageKey, value);
+              const updatedTags = await TagHelper.getByIndex<
+                TagIndexKey,
+                ITagItem
+              >("imageKey", imageKey);
               const otherTags = tags.filter(
                 (t) => t.data.imageKey !== imageKey
               );
               setTags([...otherTags, ...updatedTags]);
             }}
             updateTitle={async (key, title) => {
-              updateTitle(key, title);
-              setImages(await getImages());
+              ImageHelper.updateTitle(key, title);
+              setImages(await ImageHelper.get());
             }}
           />
         </Grid>

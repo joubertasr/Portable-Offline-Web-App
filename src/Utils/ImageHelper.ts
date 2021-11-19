@@ -1,39 +1,38 @@
-import { IImageData, IImageItem } from "../Types/ImageStore";
+import iDB, { IndexKeys } from "../Stores/Database";
+import { IImageData } from "../Types/ImageStore";
+import { CollectionHelper } from "./CollectionHelper";
 import { v4 as uuidv4 } from "uuid";
-import { ImageStore } from "../Stores/Collections";
 
-export const getImages = async (): Promise<IImageItem[]> => {
-  return await ImageStore().then((iStore) =>
-    iStore.getAllDataFromStore<IImageData>()
-  );
-};
-
-export const getImage = async (key: string): Promise<IImageItem> => {
-  return await ImageStore().then((iStore) => iStore.getItemById(key));
-};
-
-export const addImage = async (imageSrc: string): Promise<void> => {
-  const today = new Date();
-  await ImageStore().then((iStore) =>
-    iStore.add<IImageData>(uuidv4(), {
+class ImageHelper extends CollectionHelper<IndexKeys> {
+  async addImage(imageSrc: string): Promise<void> {
+    if (!this.store) {
+      if (this.dbService) {
+        await this.initialise();
+        await this.addImage(imageSrc);
+        return;
+      } else {
+        console.error("No DB SERVICE!");
+        return;
+      }
+    }
+    const today = new Date();
+    const imageKey = uuidv4();
+    const value = {
       src: imageSrc,
       title: `Taken on: ${today.toLocaleDateString()} at ${today.toLocaleTimeString()}`,
-    })
-  );
-};
+    };
+    this.store.add<IImageData>(imageKey, value);
+  }
 
-export const removeImage = async (key: string) => {
-  await ImageStore().then((iStore) => iStore.removeItemById(key));
-};
-
-export const updateTitle = async (key: string, title: string) => {
-  const imageDetails = await getImage(key);
-  if (imageDetails) {
-    await ImageStore().then((iStore) =>
-      iStore.updateItemById<IImageData>(imageDetails.key, {
+  async updateTitle(key: string, title: string) {
+    const imageDetails = await this.getById(key);
+    if (imageDetails) {
+      return this.store?.updateItemById<IImageData>(imageDetails.key, {
         ...imageDetails.data,
         title,
-      })
-    );
+      });
+    }
   }
-};
+}
+
+export default new ImageHelper(iDB, "images");
